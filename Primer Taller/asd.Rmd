@@ -1,0 +1,4676 @@
+---
+title: "Taller 1 Multivariado parte 2"
+output:
+  html_document:
+    toc: true         # Activa la barra de navegación
+    toc_float: true   # Flota a medida que te desplazas
+    toc_depth: 3 
+  pdf_document: default
+author: "Juan Andrés Camacho, Camilo Alejandro Raba  \nSebastian Orlando Olarte, Camilo
+  Esteban Gomez\n"
+date: "2024-12-05"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+# Cargar bibliotecas
+library(MASS)     # Para análisis multivariado
+library(ggplot2)  # Para visualizaciones
+library(dplyr)    # Manipulación de datos
+library(car)      # Para Hotelling's T2
+library(knitr)
+library(MVN)
+library(readxl)
+library(car)
+library(DT)
+library(ICSNP)
+library(multcomp)
+matriz_a_html <- function(m) {
+  html <- paste0(
+    "<table style='border-collapse:collapse;'>",
+    paste(
+      apply(m, 1, function(row) {
+        paste0("<tr>", paste(sprintf("<td>%s</td>", row), collapse = ""), "</tr>")
+      }),
+      collapse = "\n"
+    ),
+    "</table>"
+  )
+  return(html)
+}
+
+sum_cuad <- function(x) {
+  sum(x^2)
+}
+
+traza<- function(M){
+  sum(diag(M))
+}
+
+
+matriz_a_html <- function(m) {
+  html <- paste0(
+    "<table style='border-collapse:collapse;'>",
+    paste(
+      apply(m, 1, function(row) {
+        paste0("<tr>", paste(sprintf("<td>%s</td>", row), collapse = ""), "</tr>")
+      }),
+      collapse = "\n"
+    ),
+    "</table>"
+  )
+  return(html)
+}
+
+sum_cuad <- function(x) {
+  sum(x^2)
+}
+
+traza<- function(M){
+  sum(diag(M))
+}
+```
+
+## Ejercicio 5.1
+
+### a.
+
+Evalua $T^2$, para probar $H_{0}: \mathbb{\mu}^{\prime} = [7, 11]$ utilizando los datos:
+
+$\mathbb{X}=\left[\begin{array}{cc}2 & 12 \\ 8 & 9 \\ 6 & 9 \\ 8 & 10\end{array}\right]$
+
+```{r, include=FALSE}
+X=matrix(c(2,8,6,8,12,9,9,10), ncol=2, byrow = FALSE)
+x_barra=colMeans(X)
+S=var(X)
+n=nrow(X)
+p=ncol(X)
+miu_0=c(7,11)
+T_2=n*t(x_barra-miu_0)%*%solve(S)%*%(x_barra-miu_0)
+alpha=.95
+```
+
+Se usa $$T^{2} = n(\overline{\mathbb{X}}-\mathbb{\mu_{0}})^{\prime} S_{\mathbb{x}}^{-1}(\overline{\mathbb{X}}-\mathbb{\mu_{0}})$$ 
+
+El vector de medias muestral es:
+
+```{r, echo=FALSE}
+x_barra
+```
+
+La matriz de covarianzas muestral es:
+
+```{r, echo=FALSE}
+S
+```
+
+La estadística $T^2$ calculada:
+
+```{r, echo=FALSE}
+T_2
+```
+
+### b.
+
+Especifica la distribución de T2 para la situación en (a).
+
+Dada la expresión $T^{2} \sim \frac{(n-1)p}{n-p} F_{p,n-p}$, en este caso:
+
+```{r}
+p
+n-p
+(n-1)*p/(n-p)
+```
+
+Así $T^{2} \sim 3 F_{2,2}$
+
+### c.
+
+Utilizando (a) y (b), pruebe que $H_{0}$ a un nivel de $\alpha = .05$. ¿A qué conclusión llegamos?
+
+Realizando el calculo:
+
+```{r, echo=FALSE}
+kable(t(c(T_2,(n-1)*p*qf(alpha,p,n-p)/(n-p))), col.names = c("$T^2$", paste0("(",(n-1)*p,"/",n-p,")$F_{",p,",",n-p,"}(",1-alpha,")$")))
+
+```
+
+Dado que $T^2 < 3F_{2,2}$ no existe evidencia estadística suficiente para rechazar $H_0$ a un nivel de significancia del 5%.
+
+## Ejercicio 5.2
+
+Utilizando los datos del Ejemplo 5.1, verifica que $T^2$ permanece sin cambios si cada observación $\mathbb{x_j,j}=123$ es reemplazada por $Cx_{j}$, donde: $$
+\mathbf{C}=\left[\begin{array}{rr}
+1 & -1 \\
+1 & 1
+\end{array}\right]
+$$
+
+Note que las observaciones $$
+\mathbf{C} \mathbf{x}_j=\left[\begin{array}{l}
+x_{j 1}-x_{j 2} \\
+x_{j 1}+x_{j / 2}
+\end{array}\right]
+$$ Proporciona la matriz de datos. $$
+\left[\begin{array}{lll}
+(6-9) & (10-6) & (8-3) \\
+(6+9) & (10+6) & (8+3)
+\end{array}\right]^{\prime}
+$$
+
+```{r}
+Y=matrix(c(6,10,8,9,6,3), nrow=3, byrow = FALSE)
+C=matrix(c(1,-1,1,1), nrow = 2, byrow = TRUE)
+
+Y
+```
+
+```{r, include=FALSE}
+x_barra=C%*%colMeans(Y)
+S=C%*%var(Y)%*%t(C)
+n=nrow(Y)
+p=ncol(Y)
+miu_0=C%*%c(9,5)
+T_2=n*t(x_barra-miu_0)%*%solve(S)%*%(x_barra-miu_0)
+
+```
+
+El vector de medias muestral es:
+
+```{r, echo=FALSE}
+x_barra
+```
+
+La matriz de covarianzas muestral es:
+
+```{r, echo=FALSE}
+S
+```
+
+La estadística $T^2$ calculada:
+
+```{r, echo=FALSE}
+T_2
+```
+
+Si se compara con el valor de $T^2$ que se calculo en el ejemplo 6.1 $T^2=\frac{7}{9}$, vemos que el valor de la $T^2$ es el mismo, por tanto, confirmamos que la $T^2$ es invariante frente al cambio de unidades.
+
+## Ejercicio 5.4
+
+Utilice los datos de sudoración en la Tabla 5.1 (ver Ejemplo 5.2).
+
+### a.
+
+Determine los ejes del elipsoide de confianza del 90% para $\mathbb{\mu}$· Determine las longitudes de estos ejes.
+
+```{r, include=FALSE}
+X=read_excel("Tabla 51.xlsx")
+colnames(X)=c("Sweat_rate","Sodium", "Potassium")
+x_barra=colMeans(X)
+S=var(X)
+n=nrow(X)
+p=ncol(X)
+mu_0=c(4,50,10)
+alpha=.9
+```
+
+El vector de medias muestral es:
+
+```{r, echo=FALSE}
+x_barra
+```
+
+La matriz de covarianzas muestral es:
+
+```{r, echo=FALSE}
+S
+```
+
+Para construir la elipsoide necesitamos:
+
+```{r, echo=FALSE}
+kable(t(eigen(S)$values), col.names = c("lambda_1","lambda_2","lambda_3") )
+lambdas=eigen(S)$values
+```
+
+Revisando la distribución de $T^2$ tenemos que: $T^2 \sim \frac{3(19)}{17}F_{3,17}$
+
+Para construir la elipsoide de confianza debemos hacer que $T^{2} = n(\overline{\mathbb{X}}-\mathbb{\mu_{0}})^{\prime} S_{\mathbb{x}}^{-1}(\overline{\mathbb{X}}-\mathbb{\mu_{0}})=c^2$, en este caso $c^2=\frac{3(19)}{17}F_{3,17}(.9)$:
+
+```{r}
+(c=sqrt((p*(n-1)/(n-p))*qf(alpha,p,n-p)))
+```
+
+Para calcular los ejes usamos $Eje_{j}=\pm\sqrt{\lambda_{j}}\sqrt{\frac{p(n-1)}{n(n-p)}F_{p,n-p}(\alpha)} e_{j}$, $j=1,...,p$
+
+```{r, echo=FALSE}
+e1=(sqrt(lambdas[1])/sqrt(n))*c*eigen(S)$vector[,1]
+e2=(sqrt(lambdas[2])/sqrt(n))*c*eigen(S)$vector[,2]
+e3=(sqrt(lambdas[3])/sqrt(n))*c*eigen(S)$vector[,3]
+
+ejes=cbind(e1,e2,e3)
+rownames(ejes)=rep("$\\pm$",nrow(ejes))
+kable(ejes, col.names = c("Eje 1","Eje 2", "Eje 3"),
+      caption="Ejes de la elipsoide de confianza")
+```
+Y, la longitud de los ejes:
+
+$$2\sqrt{\lambda_{j}}\sqrt{\frac{p(n-1)}{n(n-p)}F_{p,n-p}(\alpha)}$$
+
+```{r, echo=FALSE}
+kable(t(c(2*sqrt(lambdas[1])*c/sqrt(n),sqrt(2*lambdas[2])*c/sqrt(n),
+        sqrt(2*lambdas[3])*c/sqrt(n))), col.names = c("Eje 1","Eje 2","Eje 3"),
+      caption = "Longitud de los ejes de la elipsoide de confianza")
+```
+
+
+### b.
+
+Construye gráficos Q-Q para las observaciones de la tasa de sudoración, el contenido de sodio y el contenido de potasio, respectivamente. Construye los tres gráficos de dispersión posibles para los pares de observaciones. ¿Parece justificada la suposición de normalidad multivariada en este caso? Comente.
+
+Primero construimos los tres gráficos de dispersión:
+
+```{r, echo=FALSE}
+par(mfrow=c(1,3))
+
+dataEllipse(X$Sweat_rate,X$Sodium, levels = .9, xlim=c(-1,10), ylim=c(10,80),
+            xlab=colnames(X)[1], ylab=colnames(X)[2])
+
+dataEllipse(X$Sweat_rate,X$Potassium, levels = .9, xlim=c(-1,10), ylim=c(0,20),
+            xlab=colnames(X)[1], ylab=colnames(X)[3])
+
+dataEllipse(X$Sodium,X$Potassium, levels = .9, xlim=c(10,80), ylim=c(0,20),
+            xlab=colnames(X)[2], ylab=colnames(X)[3])
+
+```
+
+Para realizar el Q-Q Plot:
+
+```{r}
+X_c=scale(X)
+
+z_t=rep(0,n)
+
+for (i in c(1:n)){
+  z_t[i]=qnorm((i-0.5)/n)
+} #Calculo de los cuantiles teóricos
+
+```
+
+Q-Q plots de las variables:
+
+```{r, echo=FALSE}
+par(mfrow=c(1,3))
+
+qqplot(z_t, X_c[,1], xlab = "Cuantiles teoricos", ylab = colnames(X)[1])
+abline(0, 1, col = "red", lwd = 1)
+
+qqplot(z_t, X_c[,2], xlab = "Cuantiles teoricos", ylab = colnames(X)[2])
+abline(0, 1, col = "red", lwd = 1) 
+
+qqplot(z_t, X_c[,3], xlab = "Cuantiles teóricos", ylab = colnames(X)[3])
+abline(0, 1, col = "red", lwd = 1)
+```
+
+De los gráficos de dipsersión concluimos que no se observa un patrón claro en los datos que nos dé indicios de una correlación entre variables, por lo que podríamos sospechar independencia. De igual forma, se podía decir que los datos conjuntamente se distribuyen de forma elíptica aproximadamente. Respecto a los QQ-plot se ve que los datos se ajustan de una buena manera con respecto a la recta a pesar del tamaño pequeño de muestra. Por tanto, podemos decir que el supuesto de normalidad es razonable,
+
+## Ejercicio 5.7
+
+Utiliza los datos de sudoración en la Tabla 5.1 (ver Ejemplo 5.2) Encuentra los intervalos de confianza simultáneos del 95%  $T^2$ para $\mathbb{\mu}_{1}$, $\mathbb{\mu}_{2}$, y $\mathbb{\mu}_{3}$ utilizando el Resultado 5.3. Construye los intervalos de confianza del 95% de Bonferroni utilizando la ecuación (5-29). Compara los dos conjuntos de intervalos.
+
+### Intervalos simultaneos:
+
+La formula para hallar estos intervalos es: 
+$$
+\begin{gathered}
+& \bar{x}_1 - \sqrt{\frac{p(n-1)}{(n-p)} F_{p, n-p}}(\alpha) \sqrt{\frac{s_{11}}{n}} \leq \mu_1 \leq \bar{x}_1 + \sqrt{\frac{p(n-1)}{(n-p)} F_{p, n-p}}(\alpha) \sqrt{\frac{s_{11}}{n}} \\
+& \bar{x}_2 - \sqrt{\frac{p(n-1)}{(n-p)} F_{p, n-p}}(\alpha) \sqrt{\frac{s_{22}}{n}} \leq \mu_2 \leq \bar{x}_2 + \sqrt{\frac{p(n-1)}{(n-p)} F_{p, n-p}}(\alpha) \sqrt{\frac{s_{22}}{n}} \\
+& \vdots \\
+& \bar{x}_p - \sqrt{\frac{p(n-1)}{(n-p)} F_{p, n-p}}(\alpha) \sqrt{\frac{s_{pp}}{n}} \leq \mu_p \leq \bar{x}_p + \sqrt{\frac{p(n-1)}{(n-p)} F_{p, n-p}}(\alpha) \sqrt{\frac{s_{pp}}{n}}
+\end{gathered}
+$$
+
+```{r, include=FALSE}
+x_b_1=x_barra[1]
+S_1=S[1,1]
+x_b_2=x_barra[2]
+S_2=S[2,2]
+x_b_3=x_barra[3]
+S_3=S[3,3]
+r1=sqrt((n-1)*p*qf(.95,p,n-p)*S_1/((n-p)*n))
+r2=sqrt((n-1)*p*qf(.95,p,n-p)*S_2/((n-p)*n))
+r3=sqrt((n-1)*p*qf(.95,p,n-p)*S_3/((n-p)*n))
+```
+
+Los intervalos de confianza simultaneos del 95% son:
+
+```{r, echo=FALSE}
+IC=matrix(NA, ncol = 2, nrow = p)
+colnames(IC)=c("LI","LS")
+rownames_IC=character(nrow(IC))
+for (i in 1:p){
+  IC[i,1]=get(paste0("x_b_",i))-get(paste0("r",i))
+  IC[i,2]=get(paste0("x_b_",i))+get(paste0("r",i))
+  rownames_IC[i]=paste0("$\\mu_",i,"$")
+}
+
+rownames(IC)=rownames_IC
+
+kable(IC, caption = "Intervalos simultaneos del 95% de confianza")
+```
+
+Elipse de confianza para $\mu_{1}$ y $\mu_{2}$:
+
+```{r, echo=FALSE}
+plot(X[,c(1,2)], ylim=c(34,57), xlim=c(3,6), type='n',
+     xlab=expression(mu[1]),
+     ylab=expression(mu[2]))
+ellipse(center = c(x_b_1,x_b_2), shape = cor(X)[-3,-3], radius = c(r1,r2), draw = TRUE)
+abline(h=x_b_2+c(r2,-r2), col="red", lty=2)
+abline(v=x_b_1+c(r1,-r1), col="red", lty=2)
+```
+
+Elipse de confianza para $\mu_{1}$ y $\mu_{3}$:
+
+```{r, echo=FALSE}
+plot(X[,c(1,2)], ylim=c(8,12), xlim=c(3,6), type='n',
+     xlab=expression(mu[1]),
+     ylab=expression(mu[3]))
+ellipse(center = c(x_b_1,x_b_3), shape = cor(X)[-2,-2], radius = c(r1,r3), draw = TRUE)
+abline(h=x_b_3+c(r3,-r3), col="red", lty=2)
+abline(v=x_b_1+c(r1,-r1), col="red", lty=2)
+```
+
+Elipse de confianza para $\mu_{2}$ y $\mu_{3}$:
+
+```{r, echo=FALSE}
+plot(X[,c(1,2)], ylim=c(8,12), xlim=c(34,57), type='n',
+     xlab=expression(mu[2]),
+     ylab=expression(mu[3]))
+ellipse(center = c(x_b_2,x_b_3), shape = cor(X)[-1,-1], radius = c(r2,r3), draw = TRUE)
+abline(h=x_b_3+c(r3,-r3), col="red", lty=2)
+abline(v=x_b_2+c(r2,-r2), col="red", lty=2)
+```
+
+### Intervalos de Bonferroni
+
+Para calcular los intervalos de Bonferroni usamos:
+
+$$
+\begin{gathered}
+& \bar{x}_{1}-t{n-1}\left(\frac{\alpha}{2 p}\right) \sqrt{\frac{s_{11}}{n}} \leq \mu_1 \leq \bar{x}_{1}+t{n-1}\left(\frac{\alpha}{2 p}\right) \sqrt{\frac{s_{11}}{n}} \\
+& \bar{x}_{2}-t{n-1}\left(\frac{\alpha}{2 p}\right) \sqrt{\frac{s_{22}}{n}} \leq \mu_2 \leq \bar{x}_{2}+t{n-1}\left(\frac{\alpha}{2 p}\right) \sqrt{\frac{s_{22}}{n}} \\
+& \vdots \\
+& \bar{x}_{p}-t{n-1}\left(\frac{\alpha}{2 p}\right) \sqrt{\frac{s_{p p}}{n}} \leq \mu_p \leq \bar{x}_{p}+t{n-1}\left(\frac{\alpha}{2 p}\right) \sqrt{\frac{s_{p p}}{n}}
+\end{gathered}
+$$
+
+```{r, include=FALSE}
+a=1-(0.05/(2*p))
+r1b=qt(a,n-1)*sqrt(S_1/n)
+r2b=qt(a,n-1)*sqrt(S_2/n)
+r3b=qt(a,n-1)*sqrt(S_3/n)                      
+```
+
+Los intervalos de confianza de Bonferroni:
+
+```{r, echo=FALSE}
+IC=matrix(NA, ncol = 2, nrow = p)
+colnames(IC)=c("LI","LS")
+rownames_IC=character(nrow(IC))
+for (i in 1:p){
+  IC[i,1]=get(paste0("x_b_",i))-get(paste0("r",i,"b"))
+  IC[i,2]=get(paste0("x_b_",i))+get(paste0("r",i,"b"))
+  rownames_IC[i]=paste0("$\\mu_",i,"$")
+}
+
+rownames(IC)=rownames_IC
+
+kable(IC, caption = "Intervalos de Bonferroni del 95% de confianza")
+
+```
+
+Elipse de confianza de Bonferroni para $\mu_{1}$ y $\mu_{2}$:
+
+```{r, echo=FALSE}
+plot(X[,c(1,2)], ylim=c(36,54), xlim=c(3.5,6), type='n',
+     xlab=expression(mu[1]),
+     ylab=expression(mu[2]))
+ellipse(center = c(x_b_1,x_b_2), shape = cor(X)[-3,-3], radius = c(r1b,r2b), draw = TRUE)
+abline(h=x_b_2+c(r2b,-r2b), col="red", lty=2)
+abline(v=x_b_1+c(r1b,-r1b), col="red", lty=2)
+```
+
+Elipse de confianza para $\mu_{1}$ y $\mu_{3}$:
+
+```{r, echo=FALSE}
+plot(X[,c(1,2)], ylim=c(8.5,11.5), xlim=c(3.5,6), type='n',
+     xlab=expression(mu[1]),
+     ylab=expression(mu[3]))
+ellipse(center = c(x_b_1,x_b_3), shape = cor(X)[-2,-2], radius = c(r1b,r3b))
+abline(h=x_b_3+c(r3b,-r3b), col="red", lty=2)
+abline(v=x_b_1+c(r1b,-r1b), col="red", lty=2)
+```
+
+Elipse de confianza para $\mu_{2}$ y $\mu_{3}$:
+
+```{r, echo=FALSE}
+plot(X[,c(1,2)], ylim=c(8.5,11.5), xlim=c(36,54), type='n',
+     xlab=expression(mu[2]),
+     ylab=expression(mu[3]))
+ellipse(center = c(x_b_2,x_b_3), shape = cor(X)[-1,-1], radius = c(r2b,r3b), draw = TRUE)
+abline(h=x_b_3+c(r3b,-r3b), col="red", lty=2)
+abline(v=x_b_2+c(r2b,-r2b), col="red", lty=2)
+```
+
+## Ejercicio 5.9
+
+Harry Roberts, un naturalista del departamento de Pesca y Caza de Alaska, estudia osos grizzly con el objetivo de mantener una población saludable. Las mediciones en n=61 osos proporcionaron las siguientes estadísticas resumidas (ver también el Ejercicio 8.23):
+```{r, echo=FALSE}
+X <- data.frame(
+  Variable = c("Weight (kg)", "Body length (cm)", "Neck (cm)", "Girth (cm)", "Head length (cm)", "Head width (cm)"),
+  Sample_mean = c(95.52, 164.38, 55.69, 93.39, 17.98, 31.13)
+)
+S <- matrix(c(
+  3266.46, 1343.97, 731.54, 1175.50, 162.68, 238.37,
+  1343.97, 721.91, 324.25, 537.35, 80.17, 117.73,
+  731.54, 324.25, 179.28, 281.17, 39.15, 56.80,
+  1175.50, 537.35, 281.17, 474.98, 63.73, 94.85,
+  162.68, 80.17, 39.15, 63.73, 9.95, 13.88,
+  238.37, 117.73, 56.80, 94.85, 13.88, 21.26
+), nrow = 6, byrow = TRUE)
+
+rownames(S) <- c("Weight", "Body length", "Neck", "Girth", "Head length", "Head width")
+colnames(S) <- c("Weight", "Body length", "Neck", "Girth", "Head length", "Head width")
+
+kable(X)
+
+
+```
+
+Matriz De Covarianza
+
+```{r, echo=FALSE}
+kable(S)
+```
+
+### a.
+
+Obtén los intervalos de confianza simultáneos del 95% para las seis medias poblacionales de las mediciones corporales.
+
+De acuerdo con el resultado 5.5 del libro guía, para n-p grande los intervalos simultaneos del $100(1-\alpha)$% son de la forma:
+
+$$\begin{gathered}\bar{x}1 \pm \sqrt{\chi_p^2(\alpha)} \sqrt{\frac{s{11}}{n}} \\ \bar{x}2 \pm \sqrt{\chi_p^2(\alpha)} \sqrt{\frac{s{22}}{n}} \\ \vdots \\ \bar{x}p \pm \sqrt{\chi_p^2(\alpha)} \sqrt{\frac{s{p p}}{n}}\end{gathered}$$
+
+Calculando, se tiene que:
+
+```{r, echo=FALSE}
+p=nrow(X)
+n=61
+a=.95
+chi=qchisq(a,p)
+
+IC=matrix(NA, ncol = 2, nrow = p)
+
+for (i in c(1:p)){
+  IC[i,1]=X[i,2]-sqrt(chi*S[i,i]/n)
+  IC[i,2]=X[i,2]+sqrt(chi*S[i,i]/n)
+}
+
+IC=as.data.frame(IC)
+colnames(IC)=c("LI","LS")
+rownames(IC)=row.names(S)
+kable(IC, caption = "Intervalos de confianza n>> al 95% de confianza")
+```
+
+### b.
+
+Obtén la elipse de confianza simultánea del 95% para la media del peso y la media del perímetro.
+
+Para construir la elipsoide necesitamos:
+
+```{r, echo=FALSE}
+kable(t(eigen(S[c(1,4),c(1,4)])$values), col.names = c("lambda_1","lambda_2") )
+lambdas=eigen(S[c(1,4),c(1,4)])$values
+```
+
+Revisando la distribución de $T^2$ tenemos que: $T^2\sim\chi^2_{p}$
+
+Para construir la elipsoide de confianza debemos hacer que $T^{2} = n(\overline{\mathbb{X}}-\mathbb{\mu_{0}})^{\prime} S_{\mathbb{x}}^{-1}(\overline{\mathbb{X}}-\mathbb{\mu_{0}})=c^2$, en este caso $c^2=\chi^2_{p}(.05)$:
+
+```{r}
+(c=sqrt(chi))
+```
+
+Para calcular los ejes usamos $Eje_{j}=\pm\sqrt{\lambda_{j}}\sqrt{\chi^2_{p}(.05)} e_{j}$, $j=1,...,p$
+
+```{r, echo=FALSE}
+e1=(sqrt(lambdas[1]))*c*eigen(S[c(1,4),c(1,4)])$vector[,1]
+e2=(sqrt(lambdas[2]))*c*eigen(S[c(1,4),c(1,4)])$vector[,2]
+
+
+ejes=cbind(e1,e2)
+rownames(ejes)=rep("$\\pm$",nrow(ejes))
+kable(ejes, col.names = c("Eje 1","Eje 2"),
+      caption="Ejes de la elipsoide de confianza")
+```
+
+Gráficando:
+
+```{r, echo=FALSE}
+sqrtcov=sqrt(diag(S))*diag(p) #Matriz desviación estandar
+cor=solve(sqrtcov)%*%S%*%solve(sqrtcov)
+colnames(cor)=colnames(S)
+rownames(cor)=rownames(S)
+r1=sqrt(chi*S[1,1]/n)
+r2=sqrt(chi*S[2,2]/n)
+
+plot(S[,c(1,2)], ylim=c(80,106), xlim=c(68,122), type='n',
+     xlab=expression(mu[weight]),
+     ylab=expression(mu[girth]))
+ellipse(center = c(X[1,2],X[4,2]), shape = cor[c(1,4),c(1,4)], radius = c(r1,r2), draw = TRUE)
+abline(h=X[4,2]+c(r2,-r2), col="red", lty=2)
+abline(v=X[1,2]+c(r1,-r1), col="red", lty=2)
+```
+
+### c.
+
+Obtén los intervalos de confianza de Bonferroni al 95% para las seis medias en la Parte a.
+
+Para calcular los intervalos de Bonferroni usamos:
+
+$$
+\begin{gathered}
+& \bar{x}_{1}-t{n-1}\left(\frac{\alpha}{2 p}\right) \sqrt{\frac{s_{11}}{n}} \leq \mu_1 \leq \bar{x}_{1}+t{n-1}\left(\frac{\alpha}{2 p}\right) \sqrt{\frac{s_{11}}{n}} \\
+& \bar{x}_{2}-t{n-1}\left(\frac{\alpha}{2 p}\right) \sqrt{\frac{s_{22}}{n}} \leq \mu_2 \leq \bar{x}_{2}+t{n-1}\left(\frac{\alpha}{2 p}\right) \sqrt{\frac{s_{22}}{n}} \\
+& \vdots \\
+& \bar{x}_{p}-t{n-1}\left(\frac{\alpha}{2 p}\right) \sqrt{\frac{s_{p p}}{n}} \leq \mu_p \leq \bar{x}_{p}+t{n-1}\left(\frac{\alpha}{2 p}\right) \sqrt{\frac{s_{p p}}{n}}
+\end{gathered}
+$$ Realizando las operaciones pertinentes:
+
+```{r, echo=FALSE}
+a=1-(0.05/(2*p))
+ICB=matrix(NA, ncol = 2, nrow = p)
+for (j in c(1:p)){
+  ICB[j,1]=X[j,2]-qt(a,n-1)*sqrt(S[j,j]/n)
+  ICB[j,2]=X[j,2]+qt(a,n-1)*sqrt(S[j,j]/n)
+  }
+colnames(ICB)=c("LI","LS")
+rownames(ICB)=rownames(S)
+kable(ICB, caption = "Intervalos de confianza de Bonferroni al 95% de confianza")
+
+```
+
+### d.
+
+Consulta la Parte b. Construye el rectángulo de confianza de Bonferroni al 95% para la media del peso y la media del perímetro usando m=6. Compara este rectángulo con la elipse de confianza de la Parte b.
+
+```{r, echo=FALSE}
+par(mar=c(5.1, 4.1, 4.1, 2.1))
+plot(S[,c(1,2)], ylim=c(80,106), xlim=c(68,122), type='n',
+     xlab=expression(mu[weight]),
+     ylab=expression(mu[girth]))
+ellipse(center = c(X[1,2],X[4,2]), shape = cor[c(1,4),c(1,4)], radius = c(r1,r2), draw = TRUE)
+abline(h=X[4,2]+c(r2,-r2), col="red", lty=2)
+abline(v=X[1,2]+c(r1,-r1), col="red", lty=2)
+abline(h=ICB[4,], col="green", lty=2)
+abline(v=ICB[1,], col="green", lty=2)
+legend("topright", legend=c("Large sample", "Bonferroni"), 
+       col=c("red", "green"), lty=c(2,2),inset = c(0, -0.275), xpd = TRUE )
+```
+
+### e.
+
+Obtén el intervalo de confianza de Bonferroni al 95% para la diferencia media del ancho de la cabeza - media del largo de la cabeza, usando m = 6 + 1 = 7 para incluir esta declaración así como las declaraciones sobre cada media individual.
+
+
+Para realizar este ejercicio usamos el procedimiento sugerido del texto guía: $\mathbf{a}^\prime\mathbb{X}\pm t_{n-1}(\frac{\alpha}{2m})\sqrt{\frac{\mathbf{a}^\prime \mathbf{S}\mathbf{a}}{n}}$. Para este caso $\mathbf{a}^{\prime}=(0,0,0,0,-1,1)$
+
+```{r, echo=FALSE}
+a=c(0,0,0,0,-1,1)
+dif_prom=t(a)%*%X[,2]
+cov_a=t(a)%*%S%*%a
+m=p
+q=1-(.05/(2*m+1))
+
+kable(cbind(dif_prom-qt(q,n-1)*sqrt(cov_a/n),dif_prom+qt(q,n-1)*sqrt(cov_a/n)),
+      col.names =c("LI","LS"), caption = paste("I.C. de Bonferroni para $\\mu_{head widht}-\\mu_{head lenght}$"))  
+```
+
+## Ejercicio 5.11
+
+Un antropólogo físico realizó un análisis mineral de nueve cabellos peruanos antiguos. Los resultados para los niveles de cromo ($x_1$) y estroncio ($x_2$), en partes por millón (ppm), fueron los siguientes:
+
+```{r, echo=FALSE}
+X=cbind(Cr=c(.48,40.53,2.19,.55,.74,.66,.93,.37,.22), 
+      St=c(12.57,73.68,11.13,20.03,20.29,.78,4.64,.43,1.08))
+kable(X)
+```
+
+Se sabe que niveles bajos de cromo (menores o iguales a 0.100 ppm) sugieren la presencia de diabetes, mientras que el estroncio es un indicador de la ingesta de proteínas animales.
+
+### a.
+
+Construye y grafica una elipse de confianza conjunta del 90% para el vector de medias poblacionales $\mathbf{\mu^{\prime}}=(\mu_{1},\mu_{2})$, asumiendo que estos nueve cabellos peruanos representan una muestra aleatoria de individuos pertenecientes a una cultura peruana antigua en particular.
+
+```{r, include=FALSE}
+x_barra=colMeans(X)
+S=var(X)
+n=nrow(X)
+p=ncol(X)
+alpha=.9
+```
+
+El vector de medias muestral es:
+
+```{r, echo=FALSE}
+x_barra
+```
+
+La matriz de covarianzas muestral es:
+
+```{r, echo=FALSE}
+S
+```
+
+Para construir la elipsoide de confianza debemos hacer que $T^{2} = n(\overline{\mathbb{X}}-\mathbb{\mu_{0}})^{\prime} S_{\mathbb{x}}^{-1}(\overline{\mathbb{X}}-\mathbb{\mu_{0}})=c^2$, en este caso $c^2=\frac{2(8)}{7}F_{2,7}(.9)$:
+
+```{r}
+(c=sqrt((p*(n-1)/(n-p))*qf(alpha,p,n-p)))
+```
+
+Para calcular los ejes usamos $Eje_{j}=\pm\sqrt{\lambda_{j}}\sqrt{\frac{p(n-1)}{n(n-p)}F_{p,n-p}(\alpha)} e_{j}$, $j=1,...,p$
+
+```{r, echo=FALSE}
+lambdas=eigen(S)$values
+kable(t(lambdas), col.names = c("lambda_1","lambda_2"),
+      caption = "Valores propios de S")
+ejes=matrix(NA, ncol = p, nrow = p)
+
+for (i in c(1:p)) {
+  ejes[,i]=(sqrt(lambdas[i])/sqrt(n))*c*eigen(S)$vector[,i]
+}
+rownames(ejes)=rep("$\\pm$",nrow(ejes))
+kable(ejes, col.names = c("Eje 1", "Eje 2"),
+      caption = "Ejes de la elipse de confianza")
+
+```
+
+El gráfico de la elipsoide:
+
+```{r, echo=FALSE}
+plot(X, xlim = c(-10,20),  ylim=c(-11,40),type = 'n',
+     xlab = expression(mu[1]),
+     ylab = expression(mu[2]))
+ellipse(x_barra, shape = cor(X), radius = c(c*sqrt(S[1,1]/n),c*sqrt(S[2,2]/n)))
+#abline(v=x_barra[1]+c(c*sqrt(S[1,1]/n),-c*sqrt(S[1,1]/n)), col="red",lty=2)
+#abline(h=x_barra[2]+c(c*sqrt(S[2,2]/n),-c*sqrt(S[2,2]/n)), col="red",lty=2)
+```
+
+### b.
+
+Obtén los intervalos de confianza simultáneos del 90% para $\mu_{1}$ y $\mu_{2}$ "proyectando" la elipse construida en la Parte a sobre cada eje coordenado. (Alternativamente, podríamos usar el Resultado 5.3.) 
+¿Parece que esta cultura peruana tiene un nivel medio de estroncio de 10? Es decir, ¿alguno de los puntos ($\mu_{1}$ arbtrary,10) está dentro de las regiones de confianza?. ¿Es $[.30, 10]^{\prime}$ un valor plausible para $\mu$?. Discuta 
+
+
+Para los intervalos basados en la distribución de la $T^2$: $$
+\begin{gathered}
+& \bar{x}_1 - \sqrt{\frac{p(n-1)}{(n-p)} F_{p, n-p}}(\alpha) \sqrt{\frac{s_{11}}{n}} \leq \mu_1 \leq \bar{x}_1 + \sqrt{\frac{p(n-1)}{(n-p)} F_{p, n-p}}(\alpha) \sqrt{\frac{s_{11}}{n}} \\
+& \bar{x}_2 - \sqrt{\frac{p(n-1)}{(n-p)} F_{p, n-p}}(\alpha) \sqrt{\frac{s_{22}}{n}} \leq \mu_2 \leq \bar{x}_2 + \sqrt{\frac{p(n-1)}{(n-p)} F_{p, n-p}}(\alpha) \sqrt{\frac{s_{22}}{n}} \\
+& \vdots \\
+& \bar{x}_p - \sqrt{\frac{p(n-1)}{(n-p)} F_{p, n-p}}(\alpha) \sqrt{\frac{s_{pp}}{n}} \leq \mu_p \leq \bar{x}_p + \sqrt{\frac{p(n-1)}{(n-p)} F_{p, n-p}}(\alpha) \sqrt{\frac{s_{pp}}{n}}
+\end{gathered}
+$$
+
+Realizando los calculos, los intervalos de confianza simultaneos son:
+
+```{r, echo=FALSE}
+IC=rbind(t(x_barra[1]+c(-c*sqrt(S[1,1]/n),c*sqrt(S[1,1]/n))),
+x_barra[2]+c(-c*sqrt(S[2,2]/n),c*sqrt(S[2,2]/n)))
+colnames(IC)=c("LI","LS")
+rownames(IC)=colnames(X)
+ICA=IC
+kable(IC, caption = "Intervalos de confianza para $\\mu_{1}$ y $\\mu_{2}$")
+```
+
+Proyectando en el gráfico de la elipse de confianza:
+
+```{r, echo=FALSE}
+par(mar=c(5.1,4.1,4.1,2.1))
+plot(x=.30,y=10, xlim = c(-10,20),  ylim=c(-11,40),type = 'p', col="magenta",
+     xlab = expression(mu[1]),
+     ylab = expression(mu[2]),
+     pch=16)
+ellipse(x_barra, shape = cor(X), radius = c(c*sqrt(S[1,1]/n),c*sqrt(S[2,2]/n)))
+abline(v=x_barra[1]+c(c*sqrt(S[1,1]/n),-c*sqrt(S[1,1]/n)), col="red",lty=2)
+abline(h=x_barra[2]+c(c*sqrt(S[2,2]/n),-c*sqrt(S[2,2]/n)), col="red",lty=2)
+abline(h=10, col="green", lty=2)
+legend("topright",legend = c(expression(paste("(",mu[1], " arb, 10)")), "(0.30, 10)"),
+       col=c("green","magenta"), pch=c(NA,16), lty=c(2,NA),
+       inset = c(0,-0.27),
+       xpd = TRUE)
+```
+
+Sí, $(\mu_{1},10)$ se encuentra en la región de confianza para ciertos valores de $\mu_{1}$ pero no para todos.
+
+$[.30,10]^{\prime}$ sí es plausible para $\mathbf{\mu}$ pues este punto se encuentra dentro de la región de confianza. Los datos no proporcionan información concluyente para decir que este valor no es plausible.
+
+### c.
+
+¿Estos datos parecen ser bivariados normales? Discute su estado con referencia a los gráficos Q-Q y a un diagrama de dispersión. Si los datos no son bivariados normales, ¿qué implicaciones tiene esto para los resultados en las Partes a y b?
+
+Construimos el gráfico de dispersión:
+
+```{r, echo=FALSE}
+
+dataEllipse(X[,1],X[,2], levels = .9,
+            xlim=c(-30,45), ylim=c(-40,80),
+            xlab=colnames(X)[1], ylab=colnames(X)[2])
+```
+
+Para realizar los Q-Q Plot:
+
+```{r}
+chi2_t=rep(0,n)
+
+for (i in c(1:n)){
+  chi2_t[i]=qchisq((i-0.5)/n, df=p)
+} #Calculo de los cuantiles teóricos
+
+chi2_t=as.vector(chi2_t)
+dist.mah=mahalanobis(X,center = x_barra, cov=S)
+
+```
+
+Q-Q plots de las variables:
+
+```{r, echo=FALSE}
+qqplot(chi2_t, dist.mah,
+       main = "Chi-square plot",
+       xlab = expression(chi^2 ~ "(2," ~ frac(j-frac(1,2), 9) ~ ")"),
+       ylab = "Mahalanobis distances",
+       cex.lab=0.7)
+abline(0, 1, col = "red", lwd = 1) 
+
+```
+
+El gáfico de dispersión se hacce díficil de interpretar por la presencia del evidente outlier, no es muy fácil disinguir si los datos se distribuyen de acuerdo a los supuestos.
+
+El tamaño de muestra es muy pequeño como para que un QQ_plot sea una prueba confiable, adicionalmente, se observa claramente un outlier que puede afectar en la inferencia ya que esta se basa en la $T^2$ que depende de estadísticas no robustas como la media muestral y la matriz de covarianzas muestral. Sin el supuesto de normalidad bivariada no podemos confiar en las conclusiones de la inferencia, especialmente porque en este caso no contamos con un tamaño de muetra grande.
+
+### d.
+
+Repite el análisis eliminando la observación atípica evidente. ¿Cambian las inferencias? Comenta.
+
+Primero detectamos cuál es el individuo de la observación atípica:
+
+```{r}
+which.max(dist.mah)
+```
+
+Se retira el outlier y repetimos el análisis:
+
+```{r}
+X=X[-2,]
+```
+
+```{r, include=FALSE}
+x_barra=colMeans(X)
+S=var(X)
+n=nrow(X)
+p=ncol(X)
+alpha=.9
+```
+
+El nuevo vector de medias muestral es:
+
+```{r, echo=FALSE}
+x_barra
+```
+
+La nueva matriz de covarianzas muestral es:
+
+```{r, echo=FALSE}
+S
+```
+
+Nuevo valor c:
+
+```{r}
+(c=sqrt((p*(n-1)/(n-p))*qf(alpha,p,n-p)))
+```
+
+Para calcular los ejes:
+
+```{r, include=FALSE}
+lambdas=eigen(S)$values
+kable(t(lambdas), col.names = c("lambda_1","lambda_2"),
+      caption = "Valores propios de S")
+ejes=matrix(NA, ncol = p, nrow = p)
+
+for (i in c(1:p)) {
+  ejes[,i]=(sqrt(lambdas[i])/sqrt(n))*c*eigen(S)$vector[,i]
+}
+rownames(ejes)=rep("$\\pm$",nrow(ejes))
+kable(ejes, col.names = c("Eje 1", "Eje 2"),
+      caption = "Ejes de la elipse de confianza")
+
+```
+
+El gráfico de la elipsoide:
+
+```{r, echo=FALSE}
+plot(X, xlim = c(0.1,1.5),  ylim=c(.47,17.27),type = 'n',
+     xlab = expression(mu[1]),
+     ylab = expression(mu[2]))
+ellipse(x_barra, shape = cor(X), radius = c(c*sqrt(S[1,1]/n),c*sqrt(S[2,2]/n)))
+#abline(v=x_barra[1]+c(c*sqrt(S[1,1]/n),-c*sqrt(S[1,1]/n)), col="red",lty=2)
+#abline(h=x_barra[2]+c(c*sqrt(S[2,2]/n),-c*sqrt(S[2,2]/n)), col="red",lty=2)
+```
+
+Para los intervalos basados en la distribución de la $T^2$:
+
+```{r, echo=FALSE}
+IC=rbind(t(x_barra[1]+c(-c*sqrt(S[1,1]/n),c*sqrt(S[1,1]/n))),
+x_barra[2]+c(-c*sqrt(S[2,2]/n),c*sqrt(S[2,2]/n)))
+colnames(IC)=c("LI","LS")
+rownames(IC)=colnames(X)
+
+kable(IC, caption = "Intervalos de confianza para $\\mu_{1}$ y $\\mu_{2}$")
+```
+
+Proyectando en el gráfico de la elipse de confianza:
+
+```{r, echo=FALSE}
+par(mar=c(5.1,4.1,4.1,2.1))
+plot(x=.30,y=10, xlim = c(0.1,1.5),  ylim=c(.47,17.27),type = 'p', col="magenta",
+     xlab = expression(mu[1]),
+     ylab = expression(mu[2]),
+     pch=16)
+ellipse(x_barra, shape = cor(X), radius = c(c*sqrt(S[1,1]/n),c*sqrt(S[2,2]/n)))
+abline(v=x_barra[1]+c(c*sqrt(S[1,1]/n),-c*sqrt(S[1,1]/n)), col="red",lty=2)
+abline(h=x_barra[2]+c(c*sqrt(S[2,2]/n),-c*sqrt(S[2,2]/n)), col="red",lty=2)
+abline(h=10, col="green", lty=2)
+legend("topright",legend = c(expression(paste("(",mu[1], " arb, 10)")), "(0.30, 10)"),
+       col=c("green","magenta"), pch=c(NA,16), lty=c(2,NA),
+       inset = c(0,-0.27),
+       xpd = TRUE)
+```
+
+$(\mu_{1},10)$ se encuentra en la región de confianza para la mayoría de valores de $\mu_{1}$, solo para unos pocos no.
+
+$[.30,10]^{\prime}$ sigue siendo un valor plausible para $\mathbf{\mu}$ pues este punto se encuentra dentro de la región de confianza.
+
+
+Ahora construyendo el gráfico de dispersión:
+
+```{r, echo=FALSE}
+
+dataEllipse(X[,1],X[,2], levels = .9,
+            xlim=c(-2,3), ylim=c(-15,30),
+            xlab=colnames(X)[1], ylab=colnames(X)[2])
+
+```
+
+No pareciese haber una relación clara entre variables, se podía decir que hay cierta evidencia de independencia entre las variables. Al ser tan pequeña la muestra se hace díficil ver una distribución de forma elíptica clara.
+
+Realizando los Q-Q Plot:
+
+```{r, include=FALSE}
+chi2_t=rep(0,n)
+
+for (i in c(1:n)){
+  chi2_t[i]=qchisq((i-0.5)/n, df=p)
+} #Calculo de los cuantiles teóricos
+
+chi2_t=as.vector(chi2_t)
+dist.mah=mahalanobis(X,center = x_barra, cov=S)
+
+```
+
+```{r, echo=FALSE}
+qqplot(chi2_t, dist.mah,
+       main = "Chi-square plot",
+       xlab = expression(chi^2 ~ "(2," ~ frac(j-frac(1,2), 8) ~ ")"),
+       ylab = "Mahalanobis distances",
+       cex.lab=0.7)
+abline(0, 1, col = "red", lwd = 1) 
+
+```
+
+Retirando el outlier podemos revisar de mejor forma la distribuión de las variable, sin embargo, al ser un tamaño de muestra tan pequeño no se puede concluir mucho con respecto al gráfico de dispersión más allá de la no presencia de un claro patrón de correlación.
+
+Los puntos se ajustan mejor a la recta, esto nos da un indicio de que no pareciese haber evidencia estadística suficiente en contra del supuesto de normalidad bivariada.
+
+Respecto a la inferencia, la amplitud de los intervalos tuvo un cambio importante
+
+```{r, echo=FALSE}
+kable(cbind(c("Con outlier","Sin outlier"),rbind(ConOutlier=t(ICA[1,]),SinOutlier=t(IC[1,]))), caption = paste("IC para" ,colnames(X)[1]))
+kable(cbind(c("Con outlier","Sin outlier"),rbind(ConOutlier=t(ICA[2,]),SinOutlier=t(IC[2,]))), caption = paste("IC para" ,colnames(X)[2]))
+```
+
+Revisando la variación porcentual:
+
+```{r, echo=FALSE}
+vp=matrix(NA,nrow = 2,ncol = 2)
+for (i in c(1:2)){
+  vp[i,1]=paste(round(((IC[i,1]-ICA[i,1])/ICA[i,1])*100,3), "%")
+  vp[i,2]=paste(round(((IC[i,2]-ICA[i,2])/ICA[i,2])*100,3), "%")
+}
+
+rownames(vp)=rownames(IC)
+colnames(vp)=colnames(IC)
+
+kable(vp, caption = "Variacion porcentual de los limites de los intervalos de confianza")
+```
+
+Lo cual nos deja ver lo poco robustos que son estos intervalos y cómo un outlier puede dañar de forma significativa la inferencia.
+
+## Ejercicio 5.12 
+
+Dado el conjunto de datos
+
+$$
+\mathbb{X}=
+\begin{bmatrix}
+3 & 6 & 0 \\
+4 & 4 & 3 \\
+- & 8 & 3 \\
+5 & - & -
+\end{bmatrix}
+$$
+
+con componentes faltantes, utiliza el algoritmo de predicción--estimación de la Sección 5.7 para estimar $\boldsymbol{\mu}$ y $\boldsymbol{\Sigma}$. Determina las estimaciones iniciales e itera para encontrar las primeras estimaciones revisadas.
+
+```{r include=FALSE}
+
+```
+**Revisión del cálculo**:
+
+1. **Media muestral inicial (\( \tilde{\mu} \))**:  
+La media se calcula ignorando los valores faltantes en cada columna:
+- **Columna 1** (\( X_1 \)): $$ \tilde{\mu}_1 = \frac{3 + 4 + 5}{3} = 4 $$,
+- **Columna 2** (\( X_2 \)): $$ \tilde{\mu}_2 = \frac{6 + 4 + 8}{3} = 6 $$,
+- **Columna 3** (\( X_3 \)): $$ \tilde{\mu}_3 = \frac{0 + 3 + 3}{3} = 2 $$.
+```{r}
+Y=matrix(c(3,6,0,4,4,3,NA,8,3,5,NA,NA), ncol = 3, byrow = TRUE)
+
+
+(mu_ini=(1/3)*cbind(sum(na.omit(Y[,1])),sum(na.omit(Y[,2])),sum(na.omit(Y[,3]))))
+
+```
+
+$$
+\tilde{\mu} = 
+\begin{bmatrix}
+4 \\
+6 \\
+2
+\end{bmatrix}.
+$$
+
+2. **Matriz de covarianza inicial (\( \tilde{\Sigma} \))**:  
+Los valores faltantes se reemplazan con las medias anteriores. Luego, calculamos la covarianza:
+
+- **Varianza de \( X_1 \) (\( \tilde{\sigma}_{11} \))**:
+$$
+\tilde{\sigma}_{11} = \frac{(3 - 4)^2 + (4 - 4)^2 + (5 - 4)^2}{4} = 0.5.
+$$
+
+- **Varianza de \( X_2 \) (\( \tilde{\sigma}_{22} \))**:
+$$
+\tilde{\sigma}_{22} = \frac{(6 - 6)^2 + (4 - 6)^2 + (8 - 6)^2}{4} = 2.0.
+$$
+
+- **Varianza de \( X_3 \) (\( \tilde{\sigma}_{33} \))**:
+$$
+\tilde{\sigma}_{33} = \frac{(0 - 2)^2 + (3 - 2)^2 + (3 - 2)^2}{4} = 1.5.
+$$
+
+- **Covarianza \( X_1 \) y \( X_2 \) (\( \tilde{\sigma}_{12} \))**:
+$$
+\tilde{\sigma}_{12} = \frac{(3 - 4)(6 - 6) + (4 - 4)(4 - 6) + (5 - 4)(6 - 6)}{4} = 0.
+$$
+
+- **Covarianza \( X_1 \) y \( X_3 \) (\( \tilde{\sigma}_{13} \))**:
+$$
+\tilde{\sigma}_{13} = \frac{(3 - 4)(0 - 2) + (4 - 4)(3 - 2) + (5 - 4)(2 - 2)}{4} = 0.5.
+$$
+
+- **Covarianza \( X_2 \) y \( X_3 \) (\( \tilde{\sigma}_{23} \))**:
+$$
+\tilde{\sigma}_{23} = \frac{(6 - 6)(0 - 2) + (4 - 6)(3 - 2) + (8 - 6)(2 - 2)}{4} = 0.
+$$
+```{r}
+s11=(1/4)*t(Y[c(1,2,4),1]-mu_ini[1])%*%(Y[c(1,2,4),1]-mu_ini[1])#sigma11
+
+s22=(1/4)*t(Y[c(1:3),2]-mu_ini[2])%*%(Y[c(1:3),2]-mu_ini[2])#sigmaa22
+
+s33=(1/4)*t(Y[c(1:3),3]-mu_ini[3])%*%(Y[c(1:3),3]-mu_ini[3])#sigma33
+
+
+s13=(1/4)*t(c(Y[c(1,2),1],mu_ini[1],Y[4,1])-mu_ini[1])%*%(c(Y[c(1:3),3],mu_ini[3])-mu_ini[3])#sigma13
+s12=(1/4)*t(c(Y[c(1,2),1],mu_ini[1],Y[4,1])-mu_ini[1])%*%(c(Y[c(1:3),2],mu_ini[2])-mu_ini[2])#sigma12
+s23=(1/4)*t(c(Y[c(1:3),2],mu_ini[2])-mu_ini[2])%*%(c(Y[c(1:3),3],mu_ini[3])-mu_ini[3])#sigma23
+
+
+(S_ini=matrix(c(s11,s12,s13,s12,s22,s23,s13,s23,s33),ncol = 3,byrow = TRUE))
+
+```
+
+$$\tilde{\Sigma} = 
+\begin{bmatrix}
+0.5 & 0.0 & 0.5 \\
+0.0 & 2.0 & 0.0 \\
+0.5 & 0.0 & 1.5
+\end{bmatrix}.$$
+
+
+**Resultados** 
+
+Las estimaciones revisadas son:
+
+Vector de medias:
+```{r}
+x13=mu_ini[1]+t(S_ini[1,c(2,3)])%*%solve(S_ini[c(2,3),c(2,3)])%*%(Y[3,c(2,3)]-mu_ini[c(2,3)])#estimacion X31
+
+x13_2=s11-t(S_ini[1,c(2,3)])%*%solve(S_ini[c(2,3),c(2,3)])%*%(S_ini[1,c(2,3)])+(x13)^2 #estimacion x31^2
+
+x2_4_3_4=mu_ini[c(2,3)]+(S_ini[1,c(2,3)])*2*(Y[4,1]-mu_ini[1]) #estimacion X24 y x34
+
+
+xf=S_ini[c(2,3),c(2,3)]-((S_ini[1,c(2,3)])%*%t(S_ini[1,c(2,3)]))*2+(x2_4_3_4)%*%t(x2_4_3_4) #estimacion (x24,x34)'(x24,x34)
+
+
+(mu_p=c(sum(Y[c(1,2,4),1],x13)/4,sum(Y[c(1:3),2],x2_4_3_4[1])/4,sum(Y[c(1:3),3],x2_4_3_4[2])/4)#Estimacion mu
+)
+```
+
+Matriz de Covarianzas:
+```{r}
+t2=matrix(NA, ncol=3, nrow = 3) #estimacion t2
+t2[1,1]=(Y[1,1]^2+Y[2,1]^2+x13_2+Y[4,1]^2)
+t2[1,2]=Y[1,1]*Y[1,2]+Y[2,1]*Y[2,2]+x13*Y[3,2]+Y[4,1]*x2_4_3_4[1]
+t2[1,3]=Y[1,1]*Y[1,3]+Y[2,1]*Y[2,3]+x13*Y[3,3]+Y[4,1]*x2_4_3_4[2]
+t2[2,2]=Y[1,2]^2+Y[2,2]^2+Y[3,2]^2+xf[1,1]
+t2[2,3]=Y[1,2]*Y[1,3]+Y[2,2]*Y[2,3]+Y[3,2]*Y[3,3]+xf[1,2]
+t2[3,3]=Y[1,3]+Y[2,3]^2+Y[3,3]^2+xf[2,2]
+t2[2,1]=Y[1,1]*Y[1,2]+Y[2,1]*Y[2,2]+x13*Y[3,2]+Y[4,1]*x2_4_3_4[1]
+t2[3,2]=Y[1,2]*Y[1,3]+Y[2,2]*Y[2,3]+Y[3,2]*Y[3,3]+xf[1,2]
+t2[3,1]=Y[1,1]*Y[1,3]+Y[2,1]*Y[2,3]+x13*Y[3,3]+Y[4,1]*x2_4_3_4[2]
+
+(1/4)*t2-mu_p%*%t(mu_p)
+```
+
+$$
+\tilde{\mu} = 
+\begin{bmatrix}
+4.0833 \\
+6.0000 \\
+2.2500
+\end{bmatrix}
+, \quad 
+\tilde{\Sigma} = 
+\begin{bmatrix}
+0.6042 & 0.1667 & 0.8125 \\
+0.1667 & 2.5000 & 0.0000 \\
+0.8125 & 0.0000 & 1.9375
+\end{bmatrix}.
+$$
+
+## Ejercicio 5.15
+
+Sea \( X_{ji} \) y \( X_{jk} \) los componentes *i-ésimo* y *k-ésimo*, respectivamente, de **X**\(_j\).
+
+### a.
+
+Demuestra que \( \mu_i = E(X_{ji}) = p_i \) y \( \sigma_{ii} = \text{Var}(X_{ji}) = p_i(1 - p_i), \ i = 1, 2, \dots, p. \)
+
+Note que $X_{ji}$ es una variable aleatoria tal que $X_{ji} \sim Ber(p_i)$. Así, 
+
+$$
+\begin{aligned}
+\mathbb{E}\left[X_{ji}\right] = & 0 \cdot p\left(X_{ij}=0 \right) + 1 \cdot p\left(X_{ij}=1 \right) \\
+= &  p\left(X_{ij}=1 \right) \\
+= & p_i
+\end{aligned}
+$$
+Por otro lado,
+
+
+\begin{aligned}
+
+\operatorname{Var\left(X_{ij}\right)} = & \mathbb{E}\left[X_{ji}^2\right] - \left(\mathbb{E}\left[X_{ji}\right]\right)^2  \\
+= & \left(0^2 \cdot p\left(X_{ij}=0 \right) + 1^2 \cdot p\left(X_{ij}=1 \right)\right) - p_i^2 \\
+= & p_i - p_i^2 \\
+= & p_i (1-p_i)
+
+\end{aligned}
+
+Por lo tanto, se muestra que \( \mu_i = p_i \) y \( \sigma_{ii} =  = p_i(1 - p_i) \) para todo $i=1,2,\ldots, n.$
+
+
+### b.
+
+Demuestra que \( \sigma_{ik} = \text{Cov}(X_{ji}, X_{jk}) = -p_i p_k, \ i \neq k. \) ¿Por qué esta covarianza debe ser necesariamente negativa?
+
+Primero tengamos en cuenta que el i-ésimo y k-ésimo componente de $\mathbf{X_j}$ corresponden a categorías distintas que, por hipótesis, son mutuamente excluyentes. Luego, si $X_{ji}$ toma el valor de 1, $X_{jk}$ necesariamente toma el valor de 0 y lo mismo en el otro sentido. Luego, $X_{ji}\cdot X_{jk} = 0$ para todo $i \not= k$. Teniendo esto en cuenta,
+$$
+\begin{aligned}
+\operatorname{Cov\left(X_{ij}, X_{ik} \right)} = & \mathbb{E}\left[X_{ji}X_{jk}\right] - \mathbb{E}\left[X_{ji}\right] \mathbb{E}\left[X_{jk}\right] \\
+= & 0 - p_ip_k \\
+= & - p_ip_k
+\end{aligned}
+$$
+
+La covarianza entre las dos variables es negativa pues si una variable toma el valor de 1, reduce la probabilidad de que la otra variable también lo haga, generando competencia. Si hay un aumento en uno, debe haber una disminución en el otro.
+
+
+## Ejercicio 5.16
+
+Como parte de un proyecto de investigación de mercado más amplio, un consultor del Banco de Shorewood quiere conocer la proporción de ahorradores que utilizan las instalaciones del banco como su principal medio de ahorro. El consultor también desea conocer las proporciones de ahorradores que utilizan los tres principales competidores: Banco B, Banco C y Banco D. Cada individuo contactado en una encuesta respondió a la siguiente pregunta:
+
+¿Cuál es su banco principal de ahorros?
+
+**Respuesta**:  
+Banco de Shorewood | Banco B | Banco C | Banco D | Otro Banco | Sin ahorros  
+
+---
+
+Una muestra de \( n = 355 \) personas con cuentas de ahorro produjo los siguientes conteos cuando se les pidió que indicaran su banco principal de ahorros (las personas sin ahorros serán ignoradas en la comparación de ahorradores, por lo que hay cinco categorías):
+
+| Banco (categoría)        | Banco de Shorewood | Banco B | Banco C | Banco D | Otro banco | **Total**        |
+|---------------------------|--------------------|---------|---------|---------|------------|------------------|
+| **Número observado**      | 105                | 119     | 56      | 25      | 50         | \( n = 355 \)    |
+| **Proporción poblacional**| \( p_1 \)          | \( p_2 \) | \( p_3 \) | \( p_4 \) | \( p_5 = 1 - (p_1 + p_2 + p_3 + p_4) \) |  
+| **Proporción muestral observada** | \( \hat{p}_1 = \frac{105}{355} = .30 \) | \( \hat{p}_2 = .33 \) | \( \hat{p}_3 = .16 \) | \( \hat{p}_4 = .07 \) | \( \hat{p}_5 = .14 \) |
+
+---
+
+Sea \( p_i \) la proporción poblacional de ahorradores en cada banco:  
+
+\[
+\begin{aligned}
+p_1 &= \text{proporción de ahorradores en el Banco de Shorewood} \\
+p_2 &= \text{proporción de ahorradores en el Banco B} \\
+p_3 &= \text{proporción de ahorradores en el Banco C} \\
+p_4 &= \text{proporción de ahorradores en el Banco D} \\
+1 - (p_1 + p_2 + p_3 + p_4) &= \text{proporción de ahorradores en otros bancos} \\
+\end{aligned}
+\]
+
+### a.
+
+Construye intervalos de confianza simultáneos al 95% para \( p_1, p_2, \dots, p_5 \).
+
+Se sabe que \( n \) es grande y las proporciones muestrales son:
+
+```{r}
+p_hat_1 <- 105/355
+p_hat_2 <- 119/355
+p_hat_3 <- 56/355
+p_hat_4 <- 25/355
+p_hat_5 <- 50/355
+n <- 355
+q <- 4
+
+p_hat <- c(p_hat_1, p_hat_2, p_hat_3, p_hat_4, p_hat_5)
+```
+
+Así,
+
+```{r echo=FALSE}
+alpha <- 0.05
+
+IC=matrix(NA, ncol = 2, nrow = q+1)
+colnames(IC)=c("LI","LS")
+rownames_IC=character(nrow(IC))
+
+for (i in c(1:(q+1))) {
+  IC[i,1]= p_hat[i] - sqrt(qchisq(1-alpha, q))*sqrt(p_hat[i]*(1-p_hat[i])/n)
+  IC[i,2]= p_hat[i] + sqrt(qchisq(1-alpha, q))*sqrt(p_hat[i]*(1-p_hat[i])/n)
+  rownames_IC[i]=paste0("$p_",i,":$")
+}
+
+rownames(IC)=rownames_IC
+
+kable(IC, caption = "Intervalos simultaneos del 95% de confianza")
+
+
+```
+
+
+
+### b. 
+Construye un intervalo de confianza simultáneo al 95% que permita una comparación entre el Banco de Shorewood y su principal competidor, el Banco B. Interpreta este intervalo.
+
+Como queremos comparar las proporciones del banco Shorewood con el banco B, se usa $\vec{a}^t = (1, -1, 0,0,0)$. Así, el intervalo del 95% de confianza simultáneo para $p_1-p_2$:
+
+$$
+(\hat{p}_1 - \hat{p}_2) \mp \sqrt{\chi^2_5(0.95)} \sqrt{\frac{\hat{p}_1(1-\hat{p}_1)-2\hat{p}_1\hat{p}_2+\hat{p_2}(1-\hat{p}_2)}{355}}
+$$
+
+```{r echo=FALSE}
+alpha <- 0.05
+
+IC=matrix(NA, ncol = 2, nrow = 1)
+colnames(IC)=c("LI","LS")
+rownames_IC=character(nrow(IC))
+
+IC[1,1] <- (p_hat_1 - p_hat_2) - sqrt(qchisq(1-alpha, q))*sqrt((p_hat_1*(1-p_hat_1)-2*p_hat_1*p_hat_2+p_hat_2*(1-p_hat_2))/n)
+IC[1,2] <- (p_hat_1 - p_hat_2) + sqrt(qchisq(1-alpha, q))*sqrt((p_hat_1*(1-p_hat_1)-2*p_hat_1*p_hat_2+p_hat_2*(1-p_hat_2))/n)
+
+rownames(IC) <- paste0("$p_1 - p_2:$")
+
+kable(IC, caption = "Intervalo simultaneo del 95% de confianza")
+
+```
+Como el intervalo contiene al 0, entonces no hay diferencias significativas entre la proporción de clientes de ambos bancos.
+
+
+## Ejercicio 5.17
+
+Con el fin de evaluar la prevalencia del consumo de drogas entre los estudiantes de secundaria en una ciudad en particular, se realizó una encuesta a una muestra aleatoria de 200 estudiantes de las cinco escuelas secundarias de la ciudad. Una de las preguntas de la encuesta y las respuestas correspondientes son las siguientes:
+
+**¿Cuál es su consumo típico semanal de marihuana?**
+
+| Categoría       | Ninguno | Moderado (1–3 cigarrillos) | Alto (4 o más cigarrillos) |
+|-----------------|---------|----------------------------|----------------------------|
+| Número de respuestas | 117     | 62                         | 21                         |
+
+Construye intervalos de confianza simultáneos al 95% para las tres proporciones \( p_1, p_2, \) y \( p_3 = 1 - (p_1 + p_2) \).
+
+Teniendo estos datos en cuenta,
+
+```{r}
+n <- 200
+q <- 2
+
+p_hat_1 <- 117/n
+p_hat_2 <- 62/n
+p_hat_3 <- 1-(p_hat_1+p_hat_2)
+
+p_hat <- c(p_hat_1, p_hat_2, p_hat_3)
+```
+
+Así,
+
+```{r echo=FALSE}
+alpha <- 0.05
+
+IC=matrix(NA, ncol = 2, nrow = q+1)
+colnames(IC)=c("LI","LS")
+rownames_IC=character(nrow(IC))
+
+for (i in c(1:(q+1))) {
+  IC[i,1]= p_hat[i] - sqrt(qchisq(1-alpha, q))*sqrt(p_hat[i]*(1-p_hat[i])/n)
+  IC[i,2]= p_hat[i] + sqrt(qchisq(1-alpha, q))*sqrt(p_hat[i]*(1-p_hat[i])/n)
+  rownames_IC[i]=paste0("$p_",i,":$")
+}
+
+rownames(IC)=rownames_IC
+
+kable(IC, caption = "Intervalos simultaneos del 95% de confianza")
+```
+
+## Ejercicio 5.18
+
+Utiliza los datos de pruebas universitarias en la Tabla 5.2 (ver Ejemplo 5.5).
+
+### a.
+Pruebe la hipótesis nula \(H_0: \mu' = [500, 50, 30]\) frente a \(H_1: \mu' \neq [500, 50, 30]\) a un nivel de significancia \(\alpha = .05\) . Suponga que \([500, 50, 30]'\) representa los puntajes promedio de miles de estudiantes universitarios durante los últimos 10 años. ¿Hay razones para creer que el grupo de estudiantes representado por los puntajes en la Tabla 5.2 está obteniendo puntajes diferentes? Explica.
+
+```{r include=FALSE}
+X <- read_excel("Tabla52.xlsx")
+
+X <- X[,2:ncol(X)]
+
+```
+Se usa $$T^{2} = n(\overline{\mathbb{X}}-\mathbb{\mu_{0}})^{\prime} S_{\mathbb{x}}^{-1}(\overline{\mathbb{X}}-\mathbb{\mu_{0}})$$ 
+
+```{r, include=FALSE}
+n = nrow(X)
+x_bar = colMeans(X)
+mu_0 = c(500, 50, 30)
+S = cov(X)
+p = ncol(X)
+T_2=n*t(x_bar-mu_0)%*%solve(S)%*%(x_bar-mu_0)
+alpha=.95
+
+```
+El vector de medias muestral es:
+
+```{r, echo=FALSE}
+x_bar
+```
+
+La matriz de covarianzas muestral es:
+
+```{r, echo=FALSE}
+S
+```
+Realizando el calculo, encontramos el $T^2$ calculado::
+
+```{r, echo=FALSE}
+kable(t(c(T_2,(n-1)*p*qf(alpha,p,n-p)/(n-p))), col.names = c("$T^2$", paste0("(",(n-1)*p,"/",n-p,")$F_{",p,",",n-p,"}(",1-alpha,")$")))
+
+```
+
+Vea que T^2 > $\frac{(83)(3)}{84}F_{0.95}(3, 84)$. Entonces, se rechaza la hipótesis nula. Los datos no sugieren que $\mu_0$ represente las puntuaciones promedio de los estudiantes en la población en los últimos 10 años.
+
+### b. 
+Determina las longitudes y direcciones de los ejes del elipsoide de confianza del 95% para \(\mu\).
+
+```{r, include=FALSE}
+Seigen <- eigen(S)
+Svalues <- Seigen$values
+Svectors <- Seigen$vectors
+
+
+c = sqrt((((n-1)*p)/(n-p))*qf(alpha, p, n-p))
+
+lenghts <- 2*sqrt((Svalues)/n)*c
+
+directions <- Svectors
+
+```
+Para calcular la longitud de los ejes:
+
+$$2\sqrt{\lambda_{j}}\sqrt{\frac{p(n-1)}{n(n-p)}F_{p,n-p}(\alpha)}$$
+Así, las longitudes son:
+
+```{r, echo=FALSE}
+kable(t(lenghts), col.names = c("Eje 1", "Eje 2", "Eje 3"),
+      caption = "Longitud de los ejes de la elipsoide de confianza")
+```
+
+Y las direcciones de los ejes son:
+
+```{r, echo=FALSE}
+kable(t(directions), col.names = c("Eje 1", "Eje 2", "Eje 3"),
+      caption = "Direccion de los ejes de la elipsoide de confianza")
+```
+
+Para cada valor propio de mayor a menor, respectivamente.
+
+### c. 
+Construye gráficos Q-Q a partir de las distribuciones marginales de los puntajes en ciencias sociales e historia, verbal y ciencias. Además, construye los tres diagramas de dispersión posibles a partir de los pares de observaciones en las diferentes variables. ¿Estos datos parecen estar distribuidos normalmente? Discute.
+
+Para construir los Q-Q plots se encuentran los cuantiles teóricos:
+
+```{r, include=TRUE}
+qc <- qnorm((1:n-1/2)/n)
+```
+
+Y se realizan los gráficos con los datos organizados:
+
+```{r, echo=FALSE}
+
+par(mfrow=c(1,3))
+
+for (i in 1:3) {
+  qqnorm(sort(unlist(X[,i]))) 
+  qqline(sort(unlist(X[,i])))
+}
+
+```
+Y se construyen los diagramas de dispersión por cada par de variables:
+
+```{r, echo=FALSE}
+
+par(mfrow=c(1,3))
+
+dataEllipse(X$X1,X$X2, levels = .9, ylim=c(20,80),
+            xlab=colnames(X)[1], ylab=colnames(X)[2])
+
+dataEllipse(X$X1,X$X3, levels = .9,
+            xlab=colnames(X)[1], ylab=colnames(X)[3])
+
+dataEllipse(X$X2,X$X3, levels = .9, xlim=c(20,80),
+            xlab=colnames(X)[2], ylab=colnames(X)[3])
+
+```
+
+Vemos que con los Q-Q plots los datos parecen distribuirse normal.
+
+Adicionalmente, los gráficos de dispersión nos muestran que los datos parecen distribuirse de forma elíptica.
+
+
+## Ejercicio 5.20
+
+Un ecólogo de vida silvestre midió  \(x_1 =\) la longitud de la cola (en milímetros) y \(x_2 =\) wa longitud del ala (en milímetros) para una muestra de \(n = 45\) hembras de milano pico gancho. Estos datos se muestran en la Tabla 5.12. Utilizando los datos de la tabla:
+
+```{r include = FALSE}
+X <- data.frame(
+  Tail_Length = c(191, 197, 208, 180, 180, 188, 210, 196, 191, 179, 208, 202, 200, 192, 199, 186, 197, 201, 190, 209, 187, 207, 178, 202, 205, 190, 189, 211, 216, 189, 173, 194, 198, 180, 190, 191, 196, 207, 209, 179, 186, 174, 181, 189, 188),
+  Wing_Length = c(284, 285, 288, 273, 275, 280, 283, 288, 271, 257, 289, 285, 272, 282, 280, 266, 285, 295, 282, 305, 285, 297, 268, 271, 285, 280, 277, 310, 305, 274, 271, 280, 300, 272, 292, 286, 285, 286, 303, 261, 262, 245, 250, 262, 258)
+)
+
+X <- as.matrix.data.frame(X)
+```
+
+### a. 
+Encuentra y dibuja la elipse de confianza del 95% para las medias poblacionales \( \mu_1 \) y \( \mu_2 \). Supón que se sabe que \( \mu_1 = 190 \, \text{mm} \) y \( \mu_2 = 275 \, \text{mm} \) fpara los machos de milanos pico gancho. ¿Son estos valores plausibles para la longitud media de la cola y la longitud media del ala en las hembras?. Explica
+
+Se tiene la siguiente información
+
+```{r, include=FALSE}
+n <-  nrow(X)
+p <-  ncol(X)
+alpha <- 0.95
+x_barra <-  colMeans(X)
+S <-  var(X)
+Sinv <-  solve(S)
+Seigen <- eigen(S)
+lambda <- Seigen$values
+vector <- Seigen$vectors
+
+
+c <- sqrt(((n-1)*p/(n-p))*qf(alpha, p, n-p)) 
+
+```
+
+El vector de medias muestral es:
+
+```{r, echo=FALSE}
+x_barra
+```
+
+La matriz de covarianzas muestral es:
+
+```{r, echo=FALSE}
+S
+```
+
+
+Luego,
+$$
+c^2 = \frac{(n-1)p}{n-p}F_\alpha(p, n-p) = \frac{(44)(2)}{43}F_\alpha(2, 43)=6.578471
+$$
+Entonces, se encuentran las longitudes de los ejes del elipsoide:
+
+
+$$2\sqrt{\lambda_{j}}\sqrt{\frac{p(n-1)}{n(n-p)}F_{p,n-p}(\alpha)}$$
+
+Así, las longitudes son:
+
+```{r, echo=FALSE}
+lenghts <- 2*sqrt((lambda)/n)*c
+
+directions <- Svectors
+
+
+kable(t(lenghts), col.names = c("Eje 1", "Eje 2"),
+      caption = "Longitud de los ejes de la elipsoide de confianza")
+```
+
+Graficando la elipse:
+
+```{r, echo=FALSE}
+
+plot(X, type='n',   xlim = c(185, 203), ylim = c(275, 285),
+     xlab=expression(mu[1]),  ylab=expression(mu[2]))
+ellipse(center = c(x_barra[1],x_barra[2]), shape = cor(X), radius = c(lenghts[1]/2,lenghts[2]/2), draw = TRUE)
+abline(v=x_barra[1]+c(lenghts[1]/2,-lenghts[1]/2), col="red",lty=2)
+abline(h=x_barra[2]+c(lenghts[2]/2,-lenghts[2]/2), col="red",lty=2)
+
+
+```
+Hagamos una prueba de hipótesis para ver si hay suficiente evidencia estadística para concluir que $(190, 275)^\prime$ corresponde a las longitudes promedio de la cola y las alas de las aves hembra.
+
+```{r, echo=FALSE}
+mu_0 <- c(190, 275)
+
+tc <- n*t(x_barra - mu_0) %*% Sinv %*% (x_barra - mu_0)
+
+valor_crit <- c^2
+
+kable(t(c(tc,valor_crit)), col.names = c("$T^2$", paste0("(",(n-1)*p,"/",n-p,")$F_{",p,",",n-p,"}(",1-alpha,")$")))
+
+```
+Vea que $T^2<6.578471$. Luego, no se rechaza la hipótesis nula y hay evidencia estadística para concluir que, con una significancia del 5%, el promedio de las longitudes de la cola y las alas de las aves hembra es igual a las de las aves macho.
+
+
+### b.
+Construye los intervalos simultáneos del 95%\( T^2 \) para \( \mu_1 \) y \( \mu_2 \) y los intervalos de Bonferroni del 95% para \( \mu_1 \) y \( \mu_2 \). Compara los dos conjuntos de intervalos. ¿Qué ventaja, si existe alguna, tienen los intervalos \( T^2 \)sobre los intervalos de Bonferroni?
+
+
+Para construir los intervalos simultáneos $T^2$ para $\mu_1$ y $\mu_2$:
+
+$$
+\begin{gathered}
+& \bar{x}_1 - \sqrt{\frac{p(n-1)}{(n-p)} F_{p, n-p}}(\alpha) \sqrt{\frac{s_{11}}{n}} \leq \mu_1 \leq \bar{x}_1 + \sqrt{\frac{p(n-1)}{(n-p)} F_{p, n-p}}(\alpha) \sqrt{\frac{s_{11}}{n}} \\
+& \bar{x}_2 - \sqrt{\frac{p(n-1)}{(n-p)} F_{p, n-p}}(\alpha) \sqrt{\frac{s_{22}}{n}} \leq \mu_2 \leq \bar{x}_2 + \sqrt{\frac{p(n-1)}{(n-p)} F_{p, n-p}}(\alpha) \sqrt{\frac{s_{22}}{n}} \\
+\end{gathered}
+$$
+
+```{r, include=FALSE}
+alpha <- 0.05
+
+LI = NULL
+LS = NULL
+t2_int <- matrix(NA, nrow = p, ncol = 2)
+for (i in 1:ncol(X)) {
+  LI[i] = x_barra[i] - c*sqrt(S[i,i]/n)
+  LS[i] = x_barra[i] + c*sqrt(S[i,i]/n)
+  names(LI[i]) = "Tail lenght mean"
+  names(LS[i]) = "Wing lenght mean"
+  print(cbind(LI[i], LS[i]))
+  t2_int[i,] <- c(LI[i], LS[i])
+}
+
+rownames(t2_int)=c("$\\mu_{Tail Lenght}$","$\\mu_{Wing Lenght}$")
+```
+Por lo tanto, los intervalos del 95% confianza $T^2$
+
+```{r, echo=FALSE}
+
+kable(t2_int, col.names = c("LI","LS"), caption = "Intervalos de confianza basados en la $T^2$")
+
+```
+
+Para los intervalos Bonferroni del 95% de confianza:
+
+$$
+\begin{gathered}
+& \bar{x}_{1}-t{n-1}\left(\frac{\alpha}{2 p}\right) \sqrt{\frac{s_{11}}{n}} \leq \mu_1 \leq \bar{x}_{1}+t{n-1}\left(\frac{\alpha}{2 p}\right) \sqrt{\frac{s_{11}}{n}} \\
+& \bar{x}_{2}-t{n-1}\left(\frac{\alpha}{2 p}\right) \sqrt{\frac{s_{22}}{n}} \leq \mu_2 \leq \bar{x}_{2}+t{n-1}\left(\frac{\alpha}{2 p}\right) \sqrt{\frac{s_{22}}{n}} \\
+\end{gathered}
+$$
+
+
+```{r, echo=FALSE}
+alpha <- 0.05
+
+LI = NULL
+LS = NULL
+bonferroni_int <- matrix(NA, nrow = p, ncol = 2)
+for (i in 1:ncol(X)) {
+  LI[i] = x_barra[i] - qt(1-alpha/(2*p), n-1)*sqrt(S[i,i]/n)
+  LS[i] = x_barra[i] + qt(1-alpha/(2*p), n-1)*sqrt(S[i,i]/n)
+  names(LI[i]) = "Tail lenght mean"
+  names(LS[i]) = "Wing lenght mean"
+  
+  bonferroni_int[i,] <- c(LI[i], LS[i])
+}
+rownames(bonferroni_int)=c("$\\mu_{Tail Lenght}$","$\\mu_{Wing Lenght}$")
+
+kable(bonferroni_int, col.names = c("LI","LS"), caption = "Intervalos de confianza de Bonferroni")
+
+```
+
+Y graficando la región de confianza usando Bonferroni:
+
+```{r, echo=FALSE}
+r1=qt(1-alpha/(2*p), n-1)*sqrt(S[1,1]/n)
+r2=qt(1-alpha/(2*p), n-1)*sqrt(S[2,2]/n)
+plot(X, type='n', xlim = c(187, 200), ylim = c(273, 288), xlab=expression(mu[1]),  ylab=expression(mu[2]))
+ellipse(center = c(x_barra[1],x_barra[2]), shape = cor(X), radius = c(r1,r2), draw   = TRUE) 
+abline(v=x_barra[1]+c(r1,-r1), lty = 2, col="red")
+abline(h=x_barra[2]+c(r2,-r2), lty = 2, col="red")
+
+```
+
+Si los comparamos, se puede ver que los intervalos obtenidos por Bonferroni son más angostos que los obtenidos por $T^2$. La ventaja de los intervalos simultáneos por $T^2$ es que toda la región de la elipse de confianza se encuentra de ellos, mientra que con los Bonferroni no es así. En esta última región hay puntos de la elipse que no están contenidos dentro de los intervalos.
+
+
+### c.
+¿Es la distribución normal bivariada un modelo poblacional viable? Explica con referencia a los gráficos  \( Q\)-\( Q \) y a un diagrama de dispersión.
+
+Obteniendo los cuantiles teóricos y ordenando las observaciones de cada variable:
+
+
+```{r, include=FALSE}
+qc <- qnorm((1:n-1/2)/n)
+X_1 <- unlist(X[, 1])
+X_1 <- sort(X_1)
+
+X_2 <- unlist(X[, 2])
+X_2 <- sort(X_2)
+```
+Y se realizan los QQ-plots junto con el diagrama de dispersión.
+
+```{r, echo=FALSE}
+par(mfrow=c(1, 3))
+plot(qc, X_1, xlab = "Cuantiles teóricos", ylab = colnames(X)[1])
+plot(qc, X_2, xlab = "Cuantiles teóricos", ylab = colnames(X)[2])
+dataEllipse(X[,1], X[,2], levels = .9, xlim=c(165,220), xlab = colnames(X)[1], ylab = colnames(X)[2])
+```
+Como se puede ver, parece haber normalidad en cada variable, además se hace una prueba formal (Shapiro-Wilk) para verificarlo.
+
+```{r, echo=FALSE}
+shapiro.test(X_1)
+shapiro.test(X_2)
+```
+Con una significancia del 5%, se concluye que los datos se distribuyen normal.
+
+
+## Ejercicio 6.1
+
+Construye y dibuja una región de confianza conjunta del 95% para el vector de diferencia de medias $\delta$ utilizando los datos de efluentes y los resultados en el Ejemplo 6.1. Nota que el punto $\delta = 0$ cae fuera del contorno del 95%. ¿Es este resultado consistente con la prueba de $H_{0} : \delta = 0$ considerada en el Ejemplo 6.1? Explica.
+
+```{r, include=FALSE}
+X <- cbind(
+  "C_BOD" = c(6, 6, 18, 8, 11, 34, 28, 71, 43, 33, 20),
+  "C_SS" = c(27, 23, 64, 44, 30, 75, 26, 124, 54, 30, 14),
+  "S_BOD" = c(25, 28, 36, 35, 15, 44, 42, 54, 34, 29, 39),
+  "S_SS" = c(15, 13, 22, 29, 31, 64, 30, 64, 56, 20, 21)
+)
+n=nrow(X)
+p=ncol(X)/2
+
+X=as.vector(X)
+X=as.matrix(X)
+```
+
+Para generar la matriz de contraste:
+
+```{r, echo=TRUE}
+C=matrix(0, nrow = p*n, ncol = nrow(X))
+
+for (i in c(1:(p*n))){
+  C[i,i]=1
+  C[i,i+2*n]=-1
+}
+
+
+```
+
+Luego $\delta$ es igual a:
+
+```{r, echo=FALSE}
+delta=cbind(delta_1=C[c(1:n),]%*%X,delta_2=C[c((n+1):(2*n)),]%*%X)
+
+kable(delta, col.names = c("$\\delta_1$", "$\\delta_2$"))
+```
+
+```{r, include=FALSE}
+delta_barra=colMeans(delta)
+S=var(delta)
+r1=sqrt(((n-1)*p*qf(.95,p,n-p)*S[1,1])/((n-p)*n))
+r2=sqrt(((n-1)*p*qf(.95,p,n-p)*S[2,2])/((n-p)*n))
+alpha=.95
+```
+
+El vector de medias de $\delta$ es:
+
+```{r}
+delta_barra
+```
+
+La matriz de covarianzas de $\delta$ es:
+
+```{r}
+S
+```
+
+Para construir la elipsoide necesitamos:
+
+```{r, echo=FALSE}
+lambdas=eigen(S)$values
+kable(t(eigen(S)$values), col.names = c("lambda_1","lambda_2") )
+
+```
+
+Revisando la distribución de $T^2$, de acuerdo al resultado 6.1, tenemos que: $T^2 \sim \frac{2(10)}{9}F_{2,9}$
+
+Para construir la elipsoide de confianza debemos hacer que $T^{2} = n(\overline{\mathbb{D}}-\mathbb{\delta_{0}})^{\prime} S_{\mathbb{d}}^{-1}(\overline{\mathbb{D}}-\mathbb{\delta_{0}})=c^2$, en este caso $c^2=\frac{2(10)}{9}F_{2,9}(.9)$:
+
+```{r}
+(c=sqrt((p*(n-1)/(n-p))*qf(alpha,p,n-p)))
+```
+
+Para calcular los ejes usamos $Eje_{j}=\pm\sqrt{\lambda_{j}}\sqrt{\frac{p(n-1)}{n(n-p)}F_{p,n-p}(\alpha)} e_{j}$, $j=1,...,p$
+
+```{r, echo=FALSE}
+e1=(sqrt(lambdas[1])/sqrt(n))*c*eigen(S)$vector[,1]
+e2=(sqrt(lambdas[2])/sqrt(n))*c*eigen(S)$vector[,2]
+
+ejes=cbind(e1,e2)
+rownames(ejes)=rep("$\\pm$",nrow(ejes))
+kable(ejes, col.names = c("Eje 1", "Eje 2"),
+      caption = "Ejes de la elipsoide de confianza")
+
+```
+
+Graficando la elipse:
+
+```{r, echo=FALSE}
+par(mar=c(5.1,4.1,4.,2.1))
+plot(x=0,y=0, ylim=c(-6,33), xlim=c(-23,4), type='p', pch=20, col="green",
+     xlab=expression(delta[1]),
+     ylab=expression(delta[2]))
+ellipse(center = c(delta_barra[1],delta_barra[2]), shape = cor(delta), radius = c(r1,r2), draw = TRUE)
+abline(h=delta_barra[2]+c(r2,-r2), col="red", lty=2)
+abline(v=delta_barra[1]+c(r1,-r1), col="red", lty=2)
+legend("topright", legend=expression(delta==0), col = "green",
+       pch=20, inset = c(0,-0.27), xpd =TRUE)
+
+```
+
+Es claro que el punto $\delta_{0}=[0,0]$ se encuentra fuera de la región de confianza del 95%. En el ejemplo 6.1 se concluyó que existe evidencia estadística suficiente para rechazar $H_{0}=\delta_{0}$, lo cuál es consistente con que el punto $[0,0]$ se halle fuera de la elipsoide de confianza ya que, los valores que se encuentran fuera de la elipsoide son los valores que pertenecen a la región de rechazo de $H_{0}$.
+
+## Ejercicio 6.2
+
+Utilizando la información del Ejemplo 6.1, construye los intervalos simultáneos de Bonferroni al 95% para los componentes del vector de diferencia de medias $\delta$. Compara las longitudes de estos intervalos con las de los intervalos simultáneos construidos en el ejemplo.
+
+Para construir los intervalos de Bonferroni de las diferencias usamos:
+
+$$\overline{d}_{i} \pm t_{n-1}\left(\frac{\alpha}{2p}\right) \sqrt{\frac{s^{2}_{d_{i}}}{n}}$$
+
+Calculando
+
+```{r, echo=FALSE}
+a=1-(0.05/(2*p))
+ICB=matrix(NA, ncol = 2, nrow = p)
+rownames_IC=character(length = nrow(ICB))
+for (j in c(1:p)){
+  ICB[j,1]=delta_barra[j]-qt(a,n-1)*sqrt(S[j,j]/n)
+  ICB[j,2]=delta_barra[j]+qt(a,n-1)*sqrt(S[j,j]/n)
+  rownames_IC[j]=paste0("$\\delta_",j,"$")
+  }
+colnames(ICB)=c("LI","LS")
+rownames(ICB)=rownames_IC
+kable(ICB, caption = "Intervalos de confianza de Bonferroni al 95% de confianza")
+r1=qt(a,n-1)*sqrt(S[1,1]/n)
+r2=qt(a,n-1)*sqrt(S[2,2]/n)
+
+IC=rbind(t(c( -22.46, 3.74)),t(c( -5.71, 32.25)))
+rownames(IC)=rownames_IC
+
+kable(IC, col.names = c("LI","LS"), 
+      caption = "Intervalos de confianza del ejemplo 6.1")
+```
+
+Construyendo la elipse usando Bonferroni:
+
+```{r, echo=FALSE}
+par(mar=c(5.1,4.1,4.,2.1))
+plot(x=0,y=0, ylim=c(-4,30), xlim=c(-21,3), type='p', pch=20, col="green",
+     xlab=expression(delta[1]),
+     ylab=expression(delta[2]))
+ellipse(center = c(delta_barra[1],delta_barra[2]), shape = cor(delta), radius = c(r1,r2), draw = TRUE)
+abline(h=delta_barra[2]+c(r2,-r2), col="red", lty=2)
+abline(v=delta_barra[1]+c(r1,-r1), col="red", lty=2)
+legend("topright", legend=expression(delta==0), col = "green",
+       pch=20, inset = c(0,-0.27), xpd =TRUE)
+
+```
+
+Es claro que en los intervalos de confianza de Bonferroni hay mejor presición pues, la amplitud del intervalo es menor que la del intervalo del ejemplo 6.1. Esto, junto a que conserva la confianza lo hace un intervalo mucho mejor y más óptimo.
+
+## Ejercicio 6.3
+
+Los datos correspondientes a la muestra 8 en la Tabla 6.1 parecen inusualmente grandes. Elimina la muestra 8. Construye una región de confianza conjunta del 95% para el vector de diferencia de medias $\delta$  los intervalos simultáneos de Bonferroni al 95% para los componentes del vector de diferencia de medias. ¿Son los resultados consistentes con una prueba de $H_0 : \delta = 0$? Discute. ¿Hace alguna diferencia el valor atípico en el análisis de estos datos?
+
+```{r, include=FALSE}
+X <- cbind(
+  "C_BOD" = c(6, 6, 18, 8, 11, 34, 28, 71, 43, 33, 20),
+  "C_SS" = c(27, 23, 64, 44, 30, 75, 26, 124, 54, 30, 14),
+  "S_BOD" = c(25, 28, 36, 35, 15, 44, 42, 54, 34, 29, 39),
+  "S_SS" = c(15, 13, 22, 29, 31, 64, 30, 64, 56, 20, 21)
+)
+
+X=X[-8,]
+n=nrow(X)
+p=ncol(X)/2
+
+X=as.vector(X)
+X=as.matrix(X)
+
+```
+
+Para generar la matriz de contraste:
+
+```{r, echo=TRUE, echo=FALSE}
+C=matrix(0, nrow = p*n, ncol = nrow(X))
+
+for (i in c(1:(p*n))){
+  C[i,i]=1
+  C[i,i+2*n]=-1
+}
+
+```
+
+Luego $\delta$ es igual a:
+
+```{r, echo=FALSE}
+delta=cbind(delta_1=C[c(1:n),]%*%X,delta_2=C[c((n+1):(2*n)),]%*%X)
+
+kable(delta, col.names = c("$\\delta_1$", "$\\delta_2$"))
+```
+
+```{r, include=FALSE}
+delta_barra=colMeans(delta)
+S=var(delta)
+r1=sqrt(((n-1)*p*qf(.95,p,n-p)*S[1,1])/((n-p)*n))
+r2=sqrt(((n-1)*p*qf(.95,p,n-p)*S[2,2])/((n-p)*n))
+alpha=.95
+```
+
+El vector de medias de $\delta$ es:
+
+```{r, echo=FALSE}
+delta_barra
+```
+
+La matriz de covarianzas de $\delta$ es:
+
+```{r, echo=FALSE}
+S
+```
+
+Para construir la elipsoide necesitamos:
+
+```{r, echo=FALSE}
+lambdas=eigen(S)$values
+kable(t(eigen(S)$values), col.names = c("lambda_1","lambda_2") )
+
+```
+
+Revisando la distribución de $T^2$, de acuerdo al resultado 6.1, tenemos que: $T^2 \sim \frac{2(9)}{8}F_{2,8}$
+
+Para construir la elipsoide de confianza debemos hacer que $T^{2} = n(\overline{\mathbb{D}}-\mathbb{\delta_{0}})^{\prime} S_{\mathbb{d}}^{-1}(\overline{\mathbb{D}}-\mathbb{\delta_{0}})=c^2$, en este caso $c^2=\frac{2(9)}{8}F_{2,8}(.9)$:
+
+```{r, echo=FALSE}
+(c=sqrt((p*(n-1)/(n-p))*qf(alpha,p,n-p)))
+```
+
+Para calcular los ejes usamos $Eje_{j}=\pm\sqrt{\lambda_{j}}\sqrt{\frac{p(n-1)}{n(n-p)}F_{p,n-p}(\alpha)} e_{j}$, $j=1,...,p$
+
+```{r, echo=FALSE}
+e1=(sqrt(lambdas[1])/sqrt(n))*c*eigen(S)$vector[,1]
+e2=(sqrt(lambdas[2])/sqrt(n))*c*eigen(S)$vector[,2]
+
+ejes=cbind(e1,e2)
+rownames(ejes)=rep("$\\pm$",nrow(ejes))
+kable(ejes, col.names = c("Eje 1", "Eje 2"),
+      caption = "Ejes de la elipsoide de confianza")
+
+```
+
+Para hallar los límites del intervalo de confianza:
+
+$$\overline{d}_i=\pm \sqrt{\frac{(n-1)p}{(n-p)}F_{p,n-p}(\alpha)} \sqrt{\frac{s^{2}_{d_i}}{n}}$$
+
+```{r, echo=FALSE}
+kable(rbind(t(c(delta_barra[1]-r1,delta_barra[1]+r1)),
+      t(c(delta_barra[2]-r2,delta_barra[2]+r2))), col.names = c("LI","LS"),
+      caption = "Intervalos simultaneos del 95% de confianza")
+```
+
+Graficando la elipse:
+
+```{r, echo=FALSE}
+par(mar=c(5.1,4.1,4.,2.1))
+plot(x=0,y=0, ylim=c(-6,24), xlim=c(-25,1), type='p', pch=20, col="green",
+     xlab=expression(delta[1]),
+     ylab=expression(delta[2]))
+ellipse(center = c(delta_barra[1],delta_barra[2]), shape = cor(delta), radius = c(r1,r2), draw = TRUE)
+abline(h=delta_barra[2]+c(r2,-r2), col="red", lty=2)
+abline(v=delta_barra[1]+c(r1,-r1), col="red", lty=2)
+legend("topright", legend=expression(delta==0), col = "green",
+       pch=20, inset = c(0,-0.27), xpd =TRUE)
+
+```
+
+Usando Bonferroni:
+
+$$\overline{d}_{i} \pm t_{n-1}\left(\frac{\alpha}{2p}\right) \sqrt{\frac{s^{2}_{d_{i}}}{n}}$$
+
+```{r, echo=FALSE}
+a=1-(0.05/(2*p))
+ICB=matrix(NA, ncol = 2, nrow = p)
+for (j in c(1:p)){
+  ICB[j,1]=delta_barra[j]-qt(a,n-1)*sqrt(S[j,j]/n)
+  ICB[j,2]=delta_barra[j]+qt(a,n-1)*sqrt(S[j,j]/n)
+  }
+colnames(ICB)=c("LI","LS")
+rownames(ICB)=rownames(S)
+kable(ICB, caption = "Intervalos de confianza de Bonferroni al 95% de confianza")
+r1=qt(a,n-1)*sqrt(S[1,1]/n)
+r2=qt(a,n-1)*sqrt(S[2,2]/n)
+
+```
+
+El gráfico la elipsoide de confianza:
+
+```{r, echo=FALSE}
+par(mar=c(5.1,4.1,4.,2.1))
+plot(x=0,y=0, ylim=c(-6,24), xlim=c(-23,1), type='p', pch=20, col="green",
+     xlab=expression(delta[1]),
+     ylab=expression(delta[2]))
+ellipse(center = c(delta_barra[1],delta_barra[2]), shape = cor(delta), radius = c(r1,r2), draw = TRUE)
+abline(h=delta_barra[2]+c(r2,-r2), col="red", lty=2)
+abline(v=delta_barra[1]+c(r1,-r1), col="red", lty=2)
+legend("topright", legend=expression(delta==0), col = "green",
+       pch=20, inset = c(0,-0.27), xpd =TRUE)
+
+```
+
+## Ejercicio 6.4
+
+Consulta el Ejemplo 6.1.
+
+### a.
+
+Repite el análisis en el Ejemplo 6.1 después de transformar los pares de observaciones a $Ln(BOD)$ and $Ln(SS)$.
+
+```{r, include=FALSE}
+X <- cbind(
+  "C_BOD" = c(6, 6, 18, 8, 11, 34, 28, 71, 43, 33, 20),
+  "C_SS" = c(27, 23, 64, 44, 30, 75, 26, 124, 54, 30, 14),
+  "S_BOD" = c(25, 28, 36, 35, 15, 44, 42, 54, 34, 29, 39),
+  "S_SS" = c(15, 13, 22, 29, 31, 64, 30, 64, 56, 20, 21)
+)
+n=nrow(X)
+p=ncol(X)/2
+
+X=apply(X,2,log)
+
+X=as.vector(X)
+X=as.matrix(X)
+```
+
+Para generar la matriz de contraste:
+
+```{r}
+C=matrix(0, nrow = p*n, ncol = nrow(X))
+
+for (i in c(1:(p*n))){
+  C[i,i]=1
+  C[i,i+2*n]=-1
+}
+
+```
+
+Luego $\delta$ es igual a:
+
+```{r, echo=FALSE}
+delta=cbind(delta_1=C[c(1:n),]%*%X,delta_2=C[c((n+1):(2*n)),]%*%X)
+
+kable(delta, col.names = c("$\\delta_1$", "$\\delta_2$"))
+```
+
+```{r, include=FALSE}
+delta_barra=colMeans(delta)
+S=var(delta)
+r1=sqrt(((n-1)*p*qf(.95,p,n-p)*S[1,1])/((n-p)*n))
+r2=sqrt(((n-1)*p*qf(.95,p,n-p)*S[2,2])/((n-p)*n))
+alpha=.95
+```
+
+El vector de medias de $\delta$ es:
+
+```{r, echo=FALSE}
+delta_barra
+```
+
+La matriz de covarianzas de $\delta$ es:
+
+```{r,echo=FALSE}
+S
+```
+
+Revisando la distribución de $T^2$ tenemos que: $T^2 \sim \frac{2(10)}{9}F_{2,9}$
+
+```{r, echo=FALSE}
+T_2=n*t(delta_barra)%*%solve(S)%*%(delta_barra)
+alpha=.95
+kable(t(c(T_2,(p*(n-1)/(n-p))*qf(alpha,p,n-p))), col.names = c("$T^2$","$(20/9)F_{2,9}(.05)$"))
+
+```
+
+Por tanto se rechaza $H_0:\delta = 0$ y concluimos que la diferencia entre las medias de los dos laboratorios es distinta de cero.
+
+Los intervalos de confianza simultaneos:
+
+$$\overline{d}_i=\pm \sqrt{\frac{(n-1)p}{(n-p)}F_{p,n-p}(\alpha)} \sqrt{\frac{s^{2}_{d_i}}{n}}$$
+
+```{r, echo=FALSE}
+kable(rbind(t(c(delta_barra[1]-r1,delta_barra[1]+r1)),
+      t(c(delta_barra[2]-r2,delta_barra[2]+r2))), col.names = c("LI","LS"),
+      caption = "Intervalos simultaneos del 95% de confianza")
+```
+
+Nuevamente los intervalos de confianza contienen al cero pero pero dado que se rechazó $H_0$ sospechamos que el punto $[0,0]$ no se encuentra dentro de la región del 95% de confianza conjunta.
+
+### b.
+
+Construye los intervalos simultáneos de Bonferroni al 95% para los componentes del vector de medias o de las variables transformadas.
+
+Usando:
+
+$$\overline{d}_{i} \pm t_{n-1}\left(\frac{\alpha}{2p}\right) \sqrt{\frac{s^{2}_{d_{i}}}{n}}$$
+
+```{r, echo=FALSE}
+a=1-(0.05/(2*p))
+ICB=matrix(NA, ncol = 2, nrow = p)
+for (j in c(1:p)){
+  ICB[j,1]=delta_barra[j]-qt(a,n-1)*sqrt(S[j,j]/n)
+  ICB[j,2]=delta_barra[j]+qt(a,n-1)*sqrt(S[j,j]/n)
+  }
+colnames(ICB)=c("LI","LS")
+rownames(ICB)=rownames(S)
+kable(ICB, caption = "Intervalos de confianza de Bonferroni al 95% de confianza")
+r1=qt(a,n-1)*sqrt(S[1,1]/n)
+r2=qt(a,n-1)*sqrt(S[2,2]/n)
+```
+
+### c.
+
+Discutir cualquier posible violación de la suposición de una distribución normal bivariada para los vectores de diferencia de las observaciones transformadas.
+
+Vamos a revisar si los datos, mediante la transformación, se comportan de manera normal:
+
+Primero, revisaremos los gráficos Q-Q de manera individual:
+
+```{r, echo=FALSE}
+X_c=scale(delta)
+
+z_t=rep(0,n)
+
+for (i in c(1:n)){
+  z_t[i]=qnorm((i-0.5)/n)
+} #Calculo de los cuantiles teóricos
+
+```
+
+Q-Q plots de las variables:
+
+```{r, echo=FALSE}
+par(mfrow=c(1,2))
+
+qqplot(z_t, X_c[,1], xlab = "Cuantiles teóricos",
+       ylab = expression(ln(delta ~ BOD)))
+abline(0, 1, col = "red", lwd = 1)
+
+
+qqplot(z_t, X_c[,2], xlab = "Cuantiles teóricos",
+       ylab = expression(ln(delta ~ SS)))
+abline(0, 1, col = "red", lwd = 1)
+```
+
+A pesar del tamaño pequeño de muestra, no existe evidencia suficiente como para rechazar que los datos se comportan normalmente bajo la transformación de forma marginal. Ahora revisaremos la normalidad bivariada:
+
+```{r}
+chi2_t=rep(0,n)
+
+for (i in c(1:n)){
+  chi2_t[i]=qchisq((i-0.5)/n, df=p)
+} #Calculo de los cuantiles teóricos
+
+chi2_t=as.vector(chi2_t)
+dist.mah=mahalanobis(delta,center = delta_barra, cov=S)
+
+```
+
+Q-Q plots de la distancia de Mahalanobis:
+
+```{r, echo=FALSE}
+qqplot(chi2_t, dist.mah,
+       main = "Chi-square plot",
+       xlab = expression(chi^2 ~ "(2," ~ frac(j-frac(1,2), 9) ~ ")"),
+       ylab = "Mahalanobis distances",
+       cex.lab=0.7)
+abline(0, 1, col = "red", lwd = 1) 
+
+```
+
+Los datos no parecen ajustarse del todo bien a la línea recta, adicionalmente se observa un claro outlier bivariado. Sin embargo, dado el tamaño pequeño de muestra un QQ-plot no sería demasiado confiable para evaluar la normalidad bivariada aunque se sospecha que existe evidencia en contra de dicho supuesto.
+
+## Ejercicio 6.5
+
+Un investigador consideró tres índices que miden la gravedad de los ataques cardíacos. Los valores de estos índices para n = 40 pacientes que llegaron a la sala de emergencias de un hospital produjeron las siguientes estadísticas resumidas:
+
+De acuerdo al libro guía:
+
+$$ T^2 = n \mathbf{C\bar{x}}^{\prime} (\mathbf{CSC'})^{-1} \mathbf{C\bar{x}} \sim \frac{(n-1)(q-1)}{(n-q+1)} F_{q-1, n-q+1}(\alpha)
+$$
+
+```{r, echo=FALSE}
+x_barra=c(46.1,57.3,50.4)
+S=matrix(c(101.3,63,71,63,80.2,55.6,71,55.6,97.4), ncol = 3, byrow = FALSE)
+C=matrix(c(1,-1,0,0,1,-1), ncol=3, byrow = TRUE)
+
+n=40
+p=3
+
+T_2=n*t(C%*%x_barra)%*%solve(C%*%S%*%t(C))%*%(C%*%x_barra)
+```
+
+El vector de medias muestral es:
+
+```{r, echo=FALSE}
+x_barra
+```
+
+La matriz de covarianzas muestral es:
+
+```{r, echo=FALSE}
+S
+```
+
+### a.
+
+Los tres índices son evaluados para cada paciente. Prueba la igualdad de las medias de los índices utilizando la ecuación (6-16) con $\alpha=.O5$.
+
+Dada la distribución de la $T^2$:
+
+```{r, echo=FALSE}
+kable(t(c(T_2,(n-1)*(p-1)*qf(.95,p-1,n-p+1)/(n-p+1))), col.names = c("$T^2$","(78/38)$F_{2,38}(.05)$"))
+```
+
+Dado que el valor de $T^2$ es mayor que el pecentil 95 de una distribución F con 2 y 39 grados de liberdad, se rechaza $H_{0}: [\mu_{1}-\mu_{2},\mu_{2}-\mu_{3}]=[0,0]$
+
+### b.
+
+Evalúa las diferencias entre los pares de medias de los índices utilizando los intervalos de confianza simultáneos del 95%. [Ver ecuación (6-18).]
+
+Usando(6.18):
+
+$$\mathbf{c}'\boldsymbol{\mu} : \mathbf{c}'\bar{\mathbf{x}} \pm 
+\sqrt{\frac{(n-1)(q-1)}{n-q+1} F_{q-1, n-q+1}(\alpha)} 
+\sqrt{\frac{\mathbf{c}'S\mathbf{c}}{n}}$$
+
+```{r, echo=FALSE}
+C=matrix(c(1,-1,0,0,1,-1,1,0,-1), ncol=3, byrow = TRUE)
+ICB=matrix(NA, ncol = 2, nrow = p)
+for (j in c(1:p)){
+  ICB[j,1]=t(C[j,])%*%x_barra-sqrt((n-1)*(p-1)*qf(.95,p-1,n-p+1)/(n-p+1))*sqrt(t(C[j,])%*%S%*%C[j,]/n)
+  ICB[j,2]=t(C[j,])%*%x_barra+sqrt((n-1)*(p-1)*qf(.95,p-1,n-p+1)/(n-p+1))*sqrt(t(C[j,])%*%S%*%C[j,]/n)
+  }
+colnames(ICB)=c("LI","LS")
+rownames(ICB)=c("$\\mu_{1}-\\mu_{2}$","$\\mu_{2}-\\mu_{3}$","$\\mu_{1}-\\mu_{3}$")
+kable(ICB, caption = "Intervalos de confianza simultaneos del 95% de confianza")
+
+```
+
+## Ejercicio 6.6
+
+Utiliza los datos para los tratamientos 2 y 3 en el Ejercicio 6.8.
+
+### a.
+
+Calculate $S_{pooled}$.
+
+De acuerdo al resultado 6-21:
+
+$$S_{pooled}=\frac{1}{n_{1}+n_{2}-2}((n_{1}-1)S_{1}+(n_{2}-1)S_{2})$$
+
+```{r, echo=FALSE}
+t2=cbind(c(3,1,2),c(3,6,3))
+t3=cbind(c(2,5,3,2),c(3,1,1,3))
+p=ncol(t2)
+n2=nrow(t2)
+n3=nrow(t3)
+
+t2_barra=colMeans(t2)
+t3_barra=colMeans(t3)
+
+S2=var(t2)
+S3=var(t3)
+
+S_pool=(1/(n2+n3-2))*((n2-1)*S2+(n3-1)*S3)
+
+rownames(S_pool)=c("t2","t3")
+colnames(S_pool)=c("t2","t3")
+
+kable(S_pool)
+
+```
+
+### b.
+
+Prueba $H_0 : \mu_{2} - \mu_{3} = 0$ utilizando un enfoque de dos muestras con un nivel de significancia $\alpha = .01$.
+
+En este caso rechazamos $H_0$ si:
+
+$$T^2 = \left[ \mathbf{\bar{X}_2 - \bar{X}_3} \right]'
+\left[ \left( \frac{1}{n_2} + \frac{1}{n_3} \right) S_{\text{pooled}} \right]^{-1}
+\left[ \mathbf{\bar{X}_2 - \bar{X}_3} \right]>\frac{(n_1 + n_2 - 2)p}{(n_1 + n_2 - p - 1)} F_{p, n_1 + n_2 - p - 1}$$
+
+```{r, echo=FALSE}
+T_2 = t(t2_barra-t3_barra)%*%solve(((1/n2)+(1/n3))*S_pool)%*%(t2_barra-t3_barra)
+
+kable(t(c(T_2,(n2+n3-2)*p*qf(.99,p,n2+n3-p-1)/(n2+n3-p-1))),col.names = c("$T^2$","((5)*2/4)$F_{2,4}(.001)$"))
+
+```
+
+Como el valor de la $T^2$ es menor que 45, existe evidencia estadística suficiente para no rechazar $H_0:\mu_{2}-\mu_{3} = 0$ con un nivel de significancia del 1%.
+
+### c.
+
+Construye intervalos de confianza simultáneos al 99% para las diferencias $\mu_{2i}-\mu_{3i}$, $i=1,2$,
+
+Para construir el intervalo usamos el resultado 6.3 del libro:
+
+$$\left( \bar{X}_{1i} - \bar{X}_{2i} \right) \pm c \sqrt{\left( \frac{1}{n_1} + \frac{1}{n_2} \right) s_{ii, \text{pooled}}} 
+\quad \text{for } i = 1, 2, \ldots, p$$
+
+```{r, echo=FALSE}
+IC <- matrix(NA, ncol = 2, nrow =p)  
+colnames(IC) <- c("LI", "LS")
+rownames_IC <- character(nrow(IC))
+
+
+for (j in 1:p) {
+    center <- t2_barra[j]-t3_barra[j]
+    # Radio del intervalo
+    radio <- sqrt((n2+n3-2)*p*qf(.99,p,n2+n3-p-1)/(n2+n3-p-1))*sqrt(S_pool[j,j]*((1/n2)+(1/n3)))
+    IC[j, ] <- c(center - radio, center + radio)
+    rownames_IC[j] <- paste0("$\\mu_{2", j,"}-\\mu_{3",j,"}$")
+}
+
+rownames(IC)=rownames_IC
+
+kable(IC)
+
+```
+
+## Ejercicio 6.7
+
+Usando las estadísticas resumidas de los datos de demanda de electricidad proporcionadas en el Ejemplo 6.4, calcula $T^2$ y prueba la hipótesis $H_0 : \mu_1 - \mu_2 = 0$, asumiendo que $\Sigma_1=\Sigma_2$ . Establece $\alpha=0.05$ Además, determina la combinación lineal de componentes de medias más responsable del rechazo de $H_0$.
+
+Para evaluar $H_0$ tenemos la siguiente regla de decisión. Rechazamos $H_0$ si:
+
+$$T^2 = \left[ \mathbf{\bar{X}_2 - \bar{X}_3} \right]'
+\left[ \left( \frac{1}{n_2} + \frac{1}{n_3} \right) S_{\text{pooled}} \right]^{-1}
+\left[ \mathbf{\bar{X}_2 - \bar{X}_3} \right]>\frac{(n_1 + n_2 - 2)p}{(n_1 + n_2 - p - 1)} F_{p, n_1 + n_2 - p - 1}$$
+
+```{r, echo=FALSE}
+p=2
+x1_barra=c(204.4,556.6) 
+S1=matrix(c(13825.3, 23823.4,23823.4,73107.4), ncol = p, nrow = p) 
+n1= 45 
+
+x2_barra=c(130,355) 
+S2 = matrix(c(8632,19616.7,19616.7,55964.5),ncol = p,nrow = p) 
+n2  = 55
+
+S_pool=(1/(n1+n2-2))*((n1-1)*S1+(n2-1)*S2)
+
+T_2=t(x1_barra-x2_barra)%*%solve(((1/n1)+(1/n2))*S_pool)%*%(x1_barra-x2_barra)
+
+kable(t(c(T_2,(n1+n2-2)*p*qf(.95,p,n1+n2-p-1)/(n1+n2-p-1))),col.names = c("$T^2$",paste0("(",(n1+n2-2)*p,")/(",(n1+n2-p-1),")$F_{",p,",",(n1+n2-p-1),"}(.05)$")))
+
+
+```
+
+Como $T^2$ es mayor que 6.24 existe evidencia estadística suficiente en contra de $H_0:\mu_{1}-\mu_{2}=0$
+
+Adicionalmente, la combinación líneal de medias de los componentes más responsable de rechazar $H_0$, de acuerdo con el libro, es:
+
+$$\hat{\mathbf{a}} \propto \left( S_{\text{pooled}} \right)^{-1} \left( \bar{\mathbf{x}}_1 - \bar{\mathbf{x}}_2 \right)$$
+
+```{r}
+solve(S_pool)%*%(x1_barra-x2_barra)
+```
+
+## Ejercicio 6.8
+
+Se recopilan observaciones sobre dos respuestas para tres tratamientos. Los vectores de observación $\left[\begin{array}{l}x_1 \\ x_2\end{array}\right]$ son
+
+Tratamiento 1: $\left[\begin{array}{l}6 \\ 7\end{array}\right],\left[\begin{array}{l}5 \\ 9\end{array}\right],\left[\begin{array}{l}8 \\ 6\end{array}\right],\left[\begin{array}{l}4 \\ 9\end{array}\right],\left[\begin{array}{l}7 \\ 9\end{array}\right]$
+
+Tratamiento 2: $\left[\begin{array}{l}3 \\ 3\end{array}\right],\left[\begin{array}{l}1 \\ 6\end{array}\right],\left[\begin{array}{l}2 \\ 3\end{array}\right]$
+
+Tratamiento 3: $\left[\begin{array}{l}2 \\ 3\end{array}\right] ,\left[\begin{array}{l}5 \\ 1\end{array}\right] ,\left[\begin{array}{l}3 \\ 1\end{array}\right] ,\left[\begin{array}{l}2 \\ 3\end{array}\right]$
+
+### a.
+
+Descompón las observaciones en los componentes de media, tratamiento y residuales, como en la ecuación (6-39). Construye los arreglos correspondientes para cada variable. (Ver Ejemplo 6.9.)
+
+```{r, echo=FALSE}
+t1=rbind(c(6,5,8,4,7),c(7,9,6,9,9))
+t2=rbind(c(3,1,2),c(3,6,3))
+t3=rbind(c(2,5,3,2),c(3,1,1,3))
+t1_barra=rowMeans(t1)
+t2_barra=rowMeans(t2)
+t3_barra=rowMeans(t3)
+t=3
+p=2
+n1=length(t1)/p
+n2=length(t2)/p
+n3=length(t3)/p
+n=n1+n2+n3
+x_barra=colMeans(t(cbind(t1,t2,t3)))
+```
+
+La media del primer tratamiento:
+
+```{r, echo=FALSE}
+t1_barra
+```
+
+La media del segundo tratamiento:
+
+```{r, echo=FALSE}
+t2_barra
+```
+
+La media del tercer tratamiento:
+
+```{r, echo=FALSE}
+t3_barra
+```
+
+La media muestral:
+
+```{r, echo=FALSE}
+x_barra
+```
+
+La descomposición en matrices se debe hacer de forma tal que $$\mathbb{x}_{lj}=\overline{\mathbb{x}}+(\overline{\mathbb{x}}_l-\overline{\mathbb{x}})+(\mathbb{x}_{lj}-\overline{\mathbb{x}}_l)$$ Matricialmente en el ejemplo 6.9 la descomposición se da de la siguente forma:
+
+$$
+\underbrace{\mathbf{Y_j}}_{\text{Observaciones}}  = 
+\underbrace{\mathbf{M_j}}_{\text{Media}} 
++ 
+\underbrace{\mathbf{T_j}}_{\text{Efecto del Tratamiento}}
++ 
+\underbrace{\mathbf{E_j}}_{\text{Residuos}},j=1...,p
+$$ Realizando la descomposición, para la primera variable:
+
+```{r, echo=FALSE}
+obs_1=matrix(NA, ncol=max(n1,n2,n3), nrow = t)
+
+for (i in c(1:t)){
+  obs_1[i,c(1:get(paste0("n",i)))]=get(paste0("t",i))[1,]
+}
+
+
+mu_1=matrix(NA,ncol = max(n1,n2,n3), nrow = t)
+
+for (i in c(1:t)){
+  mu_1[i,c(1:get(paste0("n",i)))]=x_barra[1]*rep(1,get(paste0("n",i)))
+}
+
+et_1=matrix(NA,ncol = max(n1,n2,n3), nrow = t)
+
+for (i in c(1:t)){
+  et_1[i,c(1:get(paste0("n",i)))]=(get(paste0("t",i,"_barra"))[1]-x_barra[1])
+}
+
+res_1=matrix(NA,ncol = max(n1,n2,n3), nrow = t)
+
+for (i in c(1:t)){
+  res_1[i,c(1:get(paste0("n",i)))]=get(paste0("t",i))[1,]-(get(paste0("t",i,"_barra")))[1]
+}
+
+```
+
+La matriz de observaciones:
+
+```{r}
+obs_1
+```
+
+La matriz asociada a la media
+
+```{r}
+mu_1
+```
+
+La matriz del efecto de los tratamientos:
+
+```{r}
+et_1
+```
+
+La matriz de residuos:
+
+```{r}
+res_1
+```
+
+Para la segunda variable:
+
+```{r, echo=FALSE}
+obs_1=matrix(NA, ncol=max(n1,n2,n3), nrow = t)
+
+for (i in c(1:t)){
+  obs_1[i,c(1:get(paste0("n",i)))]=get(paste0("t",i))[2,]
+}
+
+
+mu_1=matrix(NA,ncol = max(n1,n2,n3), nrow = t)
+
+for (i in c(1:t)){
+  mu_1[i,c(1:get(paste0("n",i)))]=x_barra[2]*rep(1,get(paste0("n",i)))
+}
+
+et_1=matrix(NA,ncol = max(n1,n2,n3), nrow = t)
+
+for (i in c(1:t)){
+  et_1[i,c(1:get(paste0("n",i)))]=(get(paste0("t",i,"_barra"))[2]-x_barra[2])
+}
+
+res_1=matrix(NA,ncol = max(n1,n2,n3), nrow = t)
+
+for (i in c(1:t)){
+  res_1[i,c(1:get(paste0("n",i)))]=get(paste0("t",i))[2,]-(get(paste0("t",i,"_barra")))[2]
+}
+
+```
+
+La matriz de observaciones:
+
+```{r}
+obs_1
+```
+
+La matriz asociada a la media
+
+```{r}
+mu_1
+```
+
+La matriz del efecto de los tratamientos:
+
+```{r}
+et_1
+```
+
+La matriz de residuos:
+
+```{r}
+res_1
+```
+
+### b.
+
+Utilizando la información de la Parte a, construye la tabla de MANOVA de una vía.
+
+Para el cálculo de la matrices de suma de cuadrados y productos cruzados:
+
+$$
+\begin{align*}
+\text{Treatment:} \quad \mathbf{B} &= \sum_{\ell=1}^g n_\ell (\bar{\mathbf{x}}_\ell - \bar{\mathbf{x}})(\bar{\mathbf{x}}_\ell - \bar{\mathbf{x}})' , \\[10pt]
+\text{Residual (Error):} \quad \mathbf{W} &= \sum_{\ell=1}^g \sum_{j=1}^{n_\ell} (\mathbf{x}_{\ell j} - \bar{\mathbf{x}}_\ell)(\mathbf{x}_{\ell j} - \bar{\mathbf{x}}_\ell)' , \\[10pt]
+\text{Total (corrected for the mean):} \quad \mathbf{B} + \mathbf{W} &= \sum_{\ell=1}^g \sum_{j=1}^{n_\ell} (\mathbf{x}_{\ell j} - \bar{\mathbf{x}})(\mathbf{x}_{\ell j} - \bar{\mathbf{x}})' 
+\end{align*}
+$$
+
+```{r, echo=FALSE}
+SSPT=matrix(0, ncol = p, nrow = p)
+
+for (i in(1:t)){
+  SSPT=SSPT+get(paste0("n",i))*(get(paste0("t",i,"_barra"))-x_barra)%*%t((get(paste0("t",i,"_barra"))-x_barra))  
+}
+
+SSPE=matrix(0, ncol = p, nrow = p)
+
+for (i in(1:t)){
+  for (j in (1:get(paste0("n",i)))){
+  SSPE=SSPE+(get(paste0("t",i))[,j]-get(paste0("t",i,"_barra")))%*%t((get(paste0("t",i))[,j]-get(paste0("t",i,"_barra"))))
+  }
+}
+
+SSPTot=SSPE+SSPT
+
+```
+
+Realizando la tabla MANOVA:
+
+```{r, echo=FALSE}
+MANOVA <- data.frame(
+  F.V = c("Tratamiento", "Error", "Total"),
+  SSP = c(matriz_a_html(SSPT), matriz_a_html(SSPE), matriz_a_html(SSPTot)),
+  gl=c(t-1,n-t,n-1))
+
+datatable(
+  MANOVA,
+  escape = FALSE,  # Permitir HTML dentro de las celdas
+  options = list(autoWidth = TRUE),
+  rownames = FALSE
+)
+
+
+```
+
+### c.
+
+Evalúa Wilks' lambda, $\Lambda^{*}$ , y utiliza la Tabla 6.3 para probar los efectos de tratamiento. Establece $\alpha=.5$. Repite la prueba utilizando la aproximación chi-cuadrado con la corrección de Bartlett [ver ecuación (6-43)]. Compara las conclusiones.
+
+Para hallar el $\mathbf{\Lambda^{*}}$:
+
+$$
+\Lambda^* = \frac{|\mathbf{W}|}{|\mathbf{B} + \mathbf{W}|} = 
+\frac{\left| \sum_{\ell=1}^g \sum_{j=1}^{n_\ell} (\mathbf{x}_{\ell j} - \bar{\mathbf{x}}_\ell)(\mathbf{x}_{\ell j} - \bar{\mathbf{x}}_\ell)' \right|}
+{\left| \sum_{\ell=1}^g \sum_{j=1}^{n_\ell} (\mathbf{x}_{\ell j} - \bar{\mathbf{x}})(\mathbf{x}_{\ell j} - \bar{\mathbf{x}})' \right|}
+$$
+
+Calculando $\mathbf{\Lambda^{*}}$:
+
+```{r}
+lambda=det(SSPE)/det(SSPTot)
+lambda
+```
+
+De acuerdo a la tabla 6.3 del libro guía, como $p=2$ y $g\geq2$:
+
+$$
+\left(\frac{\sum n_l - g - 1}{g - 1}\right) 
+\left(\frac{1 - \sqrt{\Lambda}}{\sqrt{\Lambda}}\right) 
+\sim F_{2(g-1), 2\left(\sum n_l - g-1\right)}
+$$
+
+Calculando el valor de le estadística de prueba:
+
+```{r,echo=FALSE}
+
+kable(cbind((n-t-1)/(t-1)*((1-sqrt(lambda))/sqrt(lambda)),qf(.95,2*(t-1),2*(n-t-1))),
+      col.names = c("F calculado", "$F_{4,16}(.95)$"))
+```
+
+Dado que el valor calculado es mayor que $F_{4,16}(.95)$, existe evidencia estadística suficiente para rechazar $H_0:\tau_{1}=\tau_{2}=\tau_{3}=0$, con un nivel de significancia del 5% concluimos que existe diferencia entre tratamientos.
+
+## Ejercicio 6.13
+
+Considera las observaciones en dos respuestas, $x_{1}$ and $x_{2}$ presentadas en la forma de la siguiente tabla de dos vías (nota que hay un solo vector de observación en cada combinación de niveles de factores):
+
+### a.
+
+Descompón las observaciones para cada una de las dos variables como
+
+$$x_{\ell k} = \bar{x} + (\bar{x}_\ell - \bar{x}) + (\bar{x}_{.k} - \bar{x}) + (x_{\ell k} - \bar{x}_\ell - \bar{x}_{.k} + \bar{x})
+$$
+
+similar to the arrays in Example 6.9. For each response, this decomposition will result in several 3 X 4 matrices. Here $\overline{x}$ is the overall average, $\overline{x_{\ell.}}$ is the average for the $\ell$th level of factor 1, and $\overline{x_{k.}}$ is the average for the $k$th level of factor 2.
+
+La descomposición es de la forma:
+
+$$
+\underbrace{\mathbf{Y_j}}_{\text{Observaciones}}  = 
+\underbrace{\mathbf{M_j}}_{\text{Media}} 
++ 
+\underbrace{\mathbf{F_1j}}_{\text{Efecto del Factor 1}}
++     
+\underbrace{\mathbf{F_2j}}_{\text{Efecto del Factor 2}}
++ 
+\underbrace{\mathbf{E_j}}_{\text{Residuos}},j=1...,p
+$$
+
+```{r, echo=FALSE}
+X=cbind(t11=c(6,8),
+t12=c(4,6),
+t13=c(8,12),
+t14=c(2,6),
+t21=c(3,8),
+t22=c(-3,2),
+t23=c(4,3),
+t24=c(-4,3),
+t31=c(-3,2),
+t32=c(-4,-5),
+t33=c(3,-3),
+t34=c(-4,-6))
+t1=3
+t2=4
+p=2
+x_barra=rowMeans(X)
+f1_1_b=rowMeans(X[,c(1:4)])
+f1_2_b=rowMeans(X[,c(5:8)])
+f1_3_b=rowMeans(X[,c(9:12)])
+f2_1_b=rowMeans(X[,c(1,5,9)])
+f2_2_b=rowMeans(X[,c(2,6,10)])
+f2_3_b=rowMeans(X[,c(3,7,11)])
+f2_4_b=rowMeans(X[,c(4,8,12)])
+```
+
+Realizando la descomposición, para la primera variable:
+
+```{r, echo=FALSE}
+obs_1=rbind(t(X[1,1:4]),t(X[1,5:8]),t(X[1,9:12]))
+
+
+mu_1=matrix(x_barra[1], ncol = t2, nrow = t1)
+
+
+et_1=rbind(t(rep(f1_1_b[1],t2)),t(rep(f1_2_b[1],t2)),t(rep(f1_3_b[1],t2)))-mu_1
+
+
+et_2=cbind(rep(f2_1_b[1],t1),rep(f2_2_b[1],t1),rep(f2_3_b[1],t1),rep(f2_4_b[1],t1))-mu_1
+
+
+res_1=obs_1-rbind(t(rep(f1_1_b[1],t2)),t(rep(f1_2_b[1],t2)),t(rep(f1_3_b[1],t2)))-cbind(rep(f2_1_b[1],t1),rep(f2_2_b[1],t1),rep(f2_3_b[1],t1),rep(f2_4_b[1],t1))+mu_1
+
+```
+
+La matriz de observaciones:
+
+```{r}
+obs_1
+```
+
+La matriz asociada a la media
+
+```{r}
+mu_1
+```
+
+La matriz del efecto del del primer factor:
+
+```{r}
+et_1
+```
+
+La matriz del efecto del segundo factor:
+
+```{r}
+et_2
+```
+
+La matriz del efecto de residuos:
+
+```{r}
+res_1
+```
+
+Para la segunda variable:
+
+```{r, echo=FALSE}
+obs_2=rbind(t(X[2,1:4]),t(X[2,5:8]),t(X[2,9:12]))
+
+
+mu_2=matrix(x_barra[2], ncol = t2, nrow = t1)
+
+
+et_12=rbind(t(rep(f1_1_b[2],t2)),t(rep(f1_2_b[2],t2)),t(rep(f1_3_b[2],t2)))-mu_2
+
+
+et_22=cbind(rep(f2_1_b[2],t1),rep(f2_2_b[2],t1),rep(f2_3_b[2],t1),rep(f2_4_b[2],t1))-mu_2
+
+
+res_2=obs_2-rbind(t(rep(f1_1_b[2],t2)),t(rep(f1_2_b[2],t2)),t(rep(f1_3_b[2],t2)))-cbind(rep(f2_1_b[2],t1),rep(f2_2_b[2],t1),rep(f2_3_b[2],t1),rep(f2_4_b[2],t1))+mu_2
+```
+
+La matriz de observaciones:
+
+```{r}
+obs_2
+```
+
+La matriz asociada a la media
+
+```{r}
+mu_2
+```
+
+La matriz del efecto del del primer factor:
+
+```{r}
+et_12
+```
+
+La matriz del efecto del segundo factor:
+
+```{r}
+et_22
+```
+
+La matriz del efecto de residuos:
+
+```{r}
+res_2
+```
+
+### b.
+
+Considera las filas de las matrices en la Parte a como si estuvieran dispuestas en un solo vector "largo", y calcula las sumas de cuadrados:
+
+$SS_{tot} = SS_{mean} + SS_{fac1} + SS_{fac2} + SS_{res}$
+
+y las sumas de productos cruzados.
+
+$SCP_{tot}$ = $SCP_{mean}$ + $SCP_{fac1}$ + $SCP_{fac2}$ + $SCP_{res}$
+
+En consecuencia, obtenemos las matrices. $SSP_{cor}$,$SSP_{fac1}$, $SSP_{fac2}$ , y $SSP_res$ con los grados de libertad. $gb-1$,$g- 1$,$b-1$,y $(g-1)(b-1)$,respectivamente.
+
+```{r, include=FALSE}
+obs=as.vector(t(rbind(obs_1,obs_2)))         
+mu=as.vector(t(rbind(mu_1,mu_2)))
+et1=as.vector(t(rbind(et_1,et_12)))
+et2=as.vector(t(rbind(et_2,et_22)))
+res=as.vector(t(rbind(res_1,res_2)))
+
+SSTot=sum_cuad(obs)
+SSMean=sum_cuad(mu)
+SSF1=sum_cuad(et1)
+SSF2=sum_cuad(et2)
+SSRes=sum_cuad(res)
+
+```
+
+Suma de cuadrados del total:
+
+```{r, echo=FALSE}
+SSTot
+```
+
+Suma de cuadrados de la media:
+
+```{r,echo=FALSE}
+SSMean
+```
+
+Suma de cuadrados del primer factor:
+
+```{r, echo=FALSE}
+SSF1
+```
+
+Suma de cuadrados del segundo factor
+
+```{r, echo=FALSE}
+SSF2
+```
+
+Suma de cuadrados de los residuos:
+
+```{r, echo=FALSE}
+SSRes
+```
+
+Para la suma de productos cruzados:
+
+SPC del total:
+
+```{r, echo=FALSE}
+(rbind(as.vector(obs_1),as.vector(obs_2))%*%t(rbind(as.vector(obs_1),as.vector(obs_2))))[1,2]
+```
+
+SPC de la media:
+
+```{r, echo=FALSE}
+(rbind(as.vector(mu_1),as.vector(mu_2))%*%t(rbind(as.vector(mu_1),as.vector(mu_2))))[1,2]
+```
+
+SPC del primer factor:
+
+```{r, echo=FALSE}
+(rbind(as.vector(et_1),as.vector(et_12))%*%t(rbind(as.vector(et_1),as.vector(et_12))))[1,2]
+```
+
+SPC del segundo factor:
+
+```{r,echo=FALSE}
+(rbind(as.vector(et_2),as.vector(et_22))%*%t(rbind(as.vector(et_2),as.vector(et_22))))[1,2]
+```
+
+SPC de los residuos:
+
+```{r, echo=FALSE}
+(rbind(as.vector(res_1),as.vector(res_2))%*%t(rbind(as.vector(res_1),as.vector(res_2))))[1,2]
+```
+
+Finalmente, la suma cuadrados y productos cruzados:
+
+Para el total corregido por la media
+
+$$\text{SSP}_{\text{cor}} = \sum_{\ell=1}^g \sum_{k=1}^b \sum_{r=1}^n (\mathbf{x}_{\ell kr} - \bar{\mathbf{x}})(\mathbf{x}_{\ell kr} - \bar{\mathbf{x}})', \text{n=1}$$
+
+```{r, echo=FALSE}
+SSPTot=rbind(t((obs-mu)[c(1:12)]),t((obs-mu)[c(13:24)]))%*%t(rbind(t((obs-mu)[c(1:12)]),t((obs-mu)[c(13:24)])))
+
+kable(SSPTot)
+
+cat("Los grados de libertad son:", t1*t2-1)
+```
+
+Para el primer factor:
+
+$$\text{SSP}_{\text{fac1}} = \sum_{\ell=1}^g bn (\bar{\mathbf{x}}_\ell - \bar{\mathbf{x}})(\bar{\mathbf{x}}_\ell - \bar{\mathbf{x}})', \text{n=1}$$
+
+```{r, echo=FALSE}
+SSPF1=rbind(as.vector(et_1),as.vector(et_12))%*%t(rbind(as.vector(et_1),as.vector(et_12)))
+
+kable(SSPF1)
+
+cat("Los grados de libertad son:", t1-1)
+```
+
+Para el segundo factor:
+
+$$\text{SSP}_{\text{fac2}} = \sum_{k=1}^b gn (\bar{\mathbf{x}}_k - \bar{\mathbf{x}})(\bar{\mathbf{x}}_k - \bar{\mathbf{x}})', \text{n=1}$$
+
+```{r,echo=FALSE}
+SSPF2=rbind(as.vector(et_2),as.vector(et_22))%*%t(rbind(as.vector(et_2),as.vector(et_22)))
+
+kable(SSPF2)
+
+cat("Los grados de libertad son:", t2-1)
+```
+
+Para los residuos, en este caso sin réplica:
+
+$$\text{SSP}_{\text{res}}=\sum_{\ell=1}^g \sum_{k=1}^b n (\bar{\mathbf{x}}_{\ell k} - \bar{\mathbf{x}}_{\ell \cdot} - \bar{\mathbf{x}}_{\cdot k} + \bar{\mathbf{x}})
+(\bar{\mathbf{x}}_{\ell k} - \bar{\mathbf{x}}_{\ell \cdot} - \bar{\mathbf{x}}_{\cdot k} + \bar{\mathbf{x}})', \text{n=1}$$
+
+```{r, echo=FALSE}
+SSPE=rbind(as.vector(res_1),as.vector(res_2))%*%t(rbind(as.vector(res_1),as.vector(res_2)))
+
+kable(SSPE)
+
+cat("Los grados de libertad son:", (t1-1)*(t2-1))
+```
+
+### c.
+
+Resume los cálculos de la Parte b en una tabla de MANOVA. Sugerencia: Esta tabla de MANOVA es consistente con la tabla MANOVA de dos vías para comparar factores y sus interacciones donde $n = 1$, $SSP_{res}$ en la tabla general de MANOVA de dos vías es una matriz cero con grados de libertad cero. La matriz de suma de cuadrados y productos cruzados de interacción se convierte ahora en la matriz residual de suma de cuadrados y productos cruzados.
+
+```{r, echo=FALSE}
+MANOVA <- data.frame(
+  F.V = c("Factor 1", "Factor 2","Error" ,"Total"),
+  SSP = c(matriz_a_html(SSPF1), matriz_a_html(SSPF2),matriz_a_html(SSPE), matriz_a_html(SSPTot)),
+  gl=c(t1-1,t2-1,(t1-1)*(t2-1),t1*t2-1))
+
+datatable(
+  MANOVA,
+  escape = FALSE,  # Permitir HTML dentro de las celdas
+  options = list(autoWidth = TRUE),
+  rownames = FALSE
+)
+
+```
+
+### d.
+
+Dado el resumen en la Parte c, prueba los efectos principales para el factor 1 y el factor 2 al nivel de significancia $\alpha =.05$ . Sugerencia: Utiliza los resultados en las ecuaciones (6-67) y (6-69), reemplazando $gb(n- 1)$ por $(g -l)(b- 1)$. Calculando el $\mathbb{\Lambda}$ para el test del factor 1:
+
+$$\Lambda^* = \frac{|\text{SSP}_{\text{res}}|}{|\text{SSP}_{\text{fac1}} + \text{SSP}_{\text{res}}|}
+$$
+
+```{r,echo=FALSE}
+lambda=det(SSPE)/det(SSPF1+SSPE)
+
+lambda
+```
+
+Dada la distribución de $\mathbb{\Lambda}$, se rechaza $H_0$ si:
+
+$$- \left[ gb(n-1) - \frac{p+1-(g-1)}{2} \right] \ln \Lambda^* > \chi^2_{(g-1)p}(\alpha)
+$$
+
+```{r, echo=FALSE}
+kable(cbind(-((t1-1)*(t2-1)-(p+1-(t1-1))/2)*log(lambda), qchisq(.95,(t1-1)*p)),
+      col.names = c("$\\chi^2$ calculado", "$\\chi^{2}_{4}(.05)$"))
+```
+
+Dado que el valor calculado es mayor que el percentil del 95% de una chi-cuadrado con4 grados de liberta, existe evidencia estadística suficiente para rechazar la hipotesis nula, por tanto, existe efecto de los tratamientos del factor 1.
+
+Calculando el $\mathbb{\Lambda}$ para el test del factor 2:
+
+$$\Lambda^* = \frac{|\text{SSP}_{\text{res}}|}{|\text{SSP}_{\text{fac2}} + \text{SSP}_{\text{res}}|}
+$$
+
+```{r,echo=FALSE}
+lambda=det(SSPE)/det(SSPF2+SSPE)
+
+lambda
+```
+
+Dada la distribución de $\mathbb{\Lambda}$, rechazamos $H_0$ si:
+
+$$
+- \left[ gb(n-1) - \frac{p+1-(b-1)}{2} \right] \ln \Lambda^* > \chi^2_{(b-1)p}(\alpha)
+$$
+
+```{r, echo=FALSE}
+kable(cbind(-((t1-1)*(t2-1)-(p+1-(t2-1))/2)*log(lambda), qchisq(.95,(t2-1)*p)),
+      col.names = c("$\\chi^2$ calculado", "$\\chi^{2}_{6}(.05)$"))
+```
+
+Dado que el valor calculado es mayor que el percentil del 95% de una chi-cuadrado con 6 grados de liberta, existe evidencia estadística suficiente para rechazar la hipotesis nula, por tanto, hay efecto de los tratamientos del factor 2.
+
+## Ejercicio 6.14
+
+Una réplica del experimento en el Ejercicio 6.13 proporciona los siguientes datos:
+
+### a.
+
+Utiliza estos datos para descomponer cada una de las dos mediciones en el vector de observación como
+
+$$
+x_{\ell k} = \bar{x} + (\bar{x}_{\ell \cdot} - \bar{x}) + (\bar{x}_{\cdot k} - \bar{x}) + (x_{\ell k} - \bar{x}_{\ell \cdot} - \bar{x}_{\cdot k} + \bar{x})
+$$
+
+donde $\overline{X}$ es el promedio general, $\overline{x_{\ell\cdot}}$ es el promedio para el $\ell$th nivel del factor 1, y $\overline{x_{\cdot k}}$ es el promedio para el $k$th nivel del factor 2. Forma los arreglos correspondientes para cada una de las dos respuestas.
+
+```{r, echo=FALSE}
+X=cbind(t11=c(14,8),
+t12=c(6,2),
+t13=c(8,2),
+t14=c(16,-4),
+t21=c(1,6),
+t22=c(5,12),
+t23=c(0,15),
+t24=c(2,7),
+t31=c(3,-2),
+t32=c(-2,7),
+t33=c(-11,1),
+t34=c(-6,6))
+t1=3
+t2=4
+p=2
+x_barra=rowMeans(X)
+f1_1_b=rowMeans(X[,c(1:4)])
+f1_2_b=rowMeans(X[,c(5:8)])
+f1_3_b=rowMeans(X[,c(9:12)])
+f2_1_b=rowMeans(X[,c(1,5,9)])
+f2_2_b=rowMeans(X[,c(2,6,10)])
+f2_3_b=rowMeans(X[,c(3,7,11)])
+f2_4_b=rowMeans(X[,c(4,8,12)])
+```
+
+Se pide descomponer de la forma:
+
+$$
+\underbrace{\mathbf{Y_j}}_{\text{Observaciones}}  = 
+\underbrace{\mathbf{M_j}}_{\text{Media}} 
++ 
+\underbrace{\mathbf{F_1j}}_{\text{Efecto del Factor 1}}
++     
+\underbrace{\mathbf{F_2j}}_{\text{Efecto del Factor 2}}
++ 
+\underbrace{\mathbf{E_j}}_{\text{Residuos}},j=1...,p
+$$
+
+Realizando la descomposición, para la primera variable:
+
+```{r, echo=FALSE}
+obs_1=rbind(t(X[1,1:4]),t(X[1,5:8]),t(X[1,9:12]))
+
+
+mu_1=matrix(x_barra[1], ncol = t2, nrow = t1)
+
+
+et_1=rbind(t(rep(f1_1_b[1],t2)),t(rep(f1_2_b[1],t2)),t(rep(f1_3_b[1],t2)))-mu_1
+
+
+et_2=cbind(rep(f2_1_b[1],t1),rep(f2_2_b[1],t1),rep(f2_3_b[1],t1),rep(f2_4_b[1],t1))-mu_1
+
+
+res_1=obs_1-rbind(t(rep(f1_1_b[1],t2)),t(rep(f1_2_b[1],t2)),t(rep(f1_3_b[1],t2)))-cbind(rep(f2_1_b[1],t1),rep(f2_2_b[1],t1),rep(f2_3_b[1],t1),rep(f2_4_b[1],t1))+mu_1
+
+```
+
+La matriz de observaciones:
+
+```{r, echo=FALSE}
+obs_1
+```
+
+La matriz asociada a la media
+
+```{r, echo=FALSE}
+mu_1
+```
+
+La matriz del efecto del del primer factor:
+
+```{r, echo=FALSE}
+et_1
+```
+
+La matriz del efecto del segundo factor:
+
+```{r, echo=FALSE}
+et_2
+```
+
+La matriz del efecto de residuos:
+
+```{r, echo=FALSE}
+res_1
+```
+
+Para la segunda variable:
+
+```{r, echo=FALSE}
+obs_2=rbind(t(X[2,1:4]),t(X[2,5:8]),t(X[2,9:12]))
+
+
+mu_2=matrix(x_barra[2], ncol = t2, nrow = t1)
+
+
+et_12=rbind(t(rep(f1_1_b[2],t2)),t(rep(f1_2_b[2],t2)),t(rep(f1_3_b[2],t2)))-mu_2
+
+
+et_22=cbind(rep(f2_1_b[2],t1),rep(f2_2_b[2],t1),rep(f2_3_b[2],t1),rep(f2_4_b[2],t1))-mu_2
+
+
+res_2=obs_2-rbind(t(rep(f1_1_b[2],t2)),t(rep(f1_2_b[2],t2)),t(rep(f1_3_b[2],t2)))-cbind(rep(f2_1_b[2],t1),rep(f2_2_b[2],t1),rep(f2_3_b[2],t1),rep(f2_4_b[2],t1))+mu_2
+```
+
+La matriz de observaciones:
+
+```{r, echo=FALSE}
+obs_2
+```
+
+La matriz asociada a la media
+
+```{r, echo=FALSE}
+mu_2
+```
+
+La matriz del efecto del del primer factor:
+
+```{r, echo=FALSE}
+et_12
+```
+
+La matriz del efecto del segundo factor:
+
+```{r, echo=FALSE}
+et_22
+```
+
+La matriz del efecto de residuos:
+
+```{r, echo=FALSE}
+res_2
+```
+
+### b.
+
+Combina los datos anteriores con los datos del Ejercicio 6.13 y realiza los cálculos necesarios para completar la tabla general de MANOVA de dos vías.
+
+```{r, echo=FALSE}
+X <- cbind(
+  t11 = as.vector(cbind(c(6, 8),X[, 1])),
+  t12 = as.vector(cbind(c(4, 6), X[,2])),
+  t13 = as.vector(cbind(c(8, 12), X[,3])),
+  t14 = as.vector(cbind(c(2, 6), X[,4])),
+  t21 = as.vector(cbind(c(3, 8), X[,5])),
+  t22 = as.vector(cbind(c(-3, 2), X[,6])),
+  t23 = as.vector(cbind(c(4, 3), X[,7])),
+  t24 = as.vector(cbind(c(-4, 3), X[,8])),
+  t31 = as.vector(cbind(c(-3, 2), X[, 9])),
+  t32 = as.vector(cbind(c(-4, -5), X[,10])),
+  t33 = as.vector(cbind(c(3, -3), X[,11])),
+  t34 = as.vector(cbind(c(-4, -6), X[,12]))
+)
+
+t1=3
+t2=4
+p=2
+r=2
+Y=cbind(X[c(1,2),],X[c(3,4),])
+x_barra=rowMeans(Y)
+f1_1_b=rowMeans(Y[,c(1:4,13:16)])
+f1_2_b=rowMeans(Y[,c(5:8,17:20)])
+f1_3_b=rowMeans(Y[,c(9:12,21:24)])
+f2_1_b=rowMeans(Y[,c(1,5,9,13,17,21)])
+f2_2_b=rowMeans(Y[,c(2,6,10,14,18,22)])
+f2_3_b=rowMeans(Y[,c(3,7,11,15,19,23)])
+f2_4_b=rowMeans(Y[,c(4,8,12,16,20,24)])
+
+```
+
+Para este caso sí hay replicación con n=2. Realizando el calculo de la SSP:
+
+$\text{SSP}_{\text{cor}} = \sum_{\ell=1}^g \sum_{k=1}^b \sum_{r=1}^n (\mathbf{x}_{\ell kr} - \bar{\mathbf{x}})(\mathbf{x}_{\ell kr} - \bar{\mathbf{x}})'$
+
+$$\text{SSP}_{\text{fac1}} = \sum_{\ell=1}^g bn (\bar{\mathbf{x}}_\ell - \bar{\mathbf{x}})(\bar{\mathbf{x}}_\ell - \bar{\mathbf{x}})'$$
+
+$$\text{SSP}_{\text{fac2}} = \sum_{k=1}^b gn (\bar{\mathbf{x}}_k - \bar{\mathbf{x}})(\bar{\mathbf{x}}_k - \bar{\mathbf{x}})'$$
+
+$$\text{SSP}_{\text{Int}} = \sum_{\ell=1}^g \sum_{k=1}^b n (\bar{\mathbf{x}}_{\ell k} - \bar{\mathbf{x}}_{\ell \cdot} - \bar{\mathbf{x}}_{\cdot k} + \bar{\mathbf{x}})
+(\bar{\mathbf{x}}_{\ell k} - \bar{\mathbf{x}}_{\ell \cdot} - \bar{\mathbf{x}}_{\cdot k} + \bar{\mathbf{x}})'$$
+
+$$\text{SSP}_{\text{res}} = \sum_{\ell=1}^g \sum_{k=1}^b \sum_{r=1}^n (\mathbf{x}_{\ell kr} - \bar{\mathbf{x}}_{\ell k})(\mathbf{x}_{\ell kr} - \bar{\mathbf{x}}_{\ell k})'
+$$
+
+```{r, echo=FALSE}
+obs_1=rbind(t(X[1,1:4]),t(X[3,1:4]),
+            t(X[1,5:8]),t(X[3,5:8]),
+            t(X[1,9:12]),t(X[3,9:12]))
+
+
+mu_1=matrix(x_barra[1], ncol = t2, nrow = t1*r)
+
+
+et_1=rbind(t(rep(f1_1_b[1],t2)),t(rep(f1_1_b[1],t2)),t(rep(f1_2_b[1],t2)),t(rep(f1_2_b[1],t2)),t(rep(f1_3_b[1],t2)),t(rep(f1_3_b[1],t2)))-mu_1
+
+
+et_2=cbind(rep(f2_1_b[1],r*t1),rep(f2_2_b[1],r*t1),rep(f2_3_b[1],r*t1),rep(f2_4_b[1],r*t1))-mu_1
+
+z=c(rep(colMeans(obs_1[c(1,2),]),r),rep(colMeans(obs_1[c(3,4),]),r),rep(colMeans(obs_1[c(5,6),]),r))
+
+int_1=matrix(z, ncol = t2, byrow = TRUE)-rbind(t(rep(f1_1_b[1],t2)),t(rep(f1_1_b[1],t2)),t(rep(f1_2_b[1],t2)),t(rep(f1_2_b[1],t2)),t(rep(f1_3_b[1],t2)),t(rep(f1_3_b[1],t2)))-cbind(rep(f2_1_b[1],r*t1),rep(f2_2_b[1],r*t1),rep(f2_3_b[1],r*t1),rep(f2_4_b[1],r*t1))+mu_1
+
+
+res_1=obs_1-matrix(z, ncol = t2, byrow = TRUE)
+
+#Segunda variable----
+
+obs_2=rbind(t(X[2,1:4]),t(X[4,1:4]),
+            t(X[2,5:8]),t(X[4,5:8]),
+            t(X[2,9:12]),t(X[4,9:12]))
+
+
+mu_2=matrix(x_barra[2], ncol = t2, nrow = t1*r)
+
+
+et_12=rbind(t(rep(f1_1_b[2],t2)),t(rep(f1_1_b[2],t2)),t(rep(f1_2_b[2],t2)),t(rep(f1_2_b[2],t2)),t(rep(f1_3_b[2],t2)),t(rep(f1_3_b[2],t2)))-mu_2
+
+
+et_22=cbind(rep(f2_1_b[2],r*t1),rep(f2_2_b[2],r*t1),rep(f2_3_b[2],r*t1),rep(f2_4_b[2],r*t1))-mu_2
+
+
+z=c(rep(colMeans(obs_2[c(1,2),]),r),rep(colMeans(obs_2[c(3,4),]),r),rep(colMeans(obs_2[c(5,6),]),r))
+
+int_2=matrix(z, ncol = t2, byrow = TRUE)-rbind(t(rep(f1_1_b[2],t2)),t(rep(f1_1_b[2],t2)),t(rep(f1_2_b[2],t2)),t(rep(f1_2_b[2],t2)),t(rep(f1_3_b[2],t2)),t(rep(f1_3_b[2],t2)))-cbind(rep(f2_1_b[2],r*t1),rep(f2_2_b[2],r*t1),rep(f2_3_b[2],r*t1),rep(f2_4_b[2],r*t1))+mu_2
+
+
+res_2=obs_2-matrix(z, ncol = t2, byrow = TRUE)
+
+#Conjuntamente-----
+
+obs=as.vector(t(rbind(obs_1,obs_2)))         
+mu=as.vector(t(rbind(mu_1,mu_2)))
+
+
+SSPTot=rbind(t((obs-mu)[c(1:24)]),t((obs-mu)[c(25:48)]))%*%t(rbind(t((obs-mu)[c(1:24)]),t((obs-mu)[c(25:48)])))
+
+SSPF1=rbind(as.vector(et_1),as.vector(et_12))%*%t(rbind(as.vector(et_1),as.vector(et_12)))
+
+SSPF2=rbind(as.vector(et_2),as.vector(et_22))%*%t(rbind(as.vector(et_2),as.vector(et_22)))
+
+SSPInt=rbind(as.vector(int_1),as.vector(int_2))%*%t(rbind(as.vector(int_1),as.vector(int_2)))
+
+SSPE=rbind(as.vector(res_1),as.vector(res_2))%*%t(rbind(as.vector(res_1),as.vector(res_2)))
+
+
+#tabla
+MANOVA <- data.frame(
+  F.V = c("Factor 1", "Factor 2","Interaccion","Error" ,"Total"),
+  SSP = c(matriz_a_html(SSPF1), matriz_a_html(SSPF2),matriz_a_html(SSPInt),
+          matriz_a_html(SSPE),matriz_a_html(SSPTot)),
+  gl=c(t1-1,t2-1,(t1-1)*(t2-1),t1*t2*(r-1),t1*t2*r-1))
+
+datatable(
+  MANOVA,
+  escape = FALSE,  # Permitir HTML dentro de las celdas
+  options = list(autoWidth = TRUE),
+  rownames = FALSE
+)
+
+```
+
+### c.
+
+Dados los resultados de la Parte b, prueba la existencia de interacciones. Si las interacciones no existen, prueba los efectos principales del factor 1 y del factor 2. Utiliza la prueba de razón de verosimilitud con $\alpha= .05$.
+
+Test de las interacciones:
+
+$$
+\Lambda^* = \frac{|\text{SSP}_{\text{res}}|}{|\text{SSP}_{\text{Int}} + \text{SSP}_{\text{res}}|}$$
+
+```{r, echo=FALSE}
+lambda=det(SSPE)/det(SSPInt+SSPE)
+lambda
+```
+
+Dada la distribución de $\mathbb{\Lambda^{*}}$, rechazamos $H_0$ si:
+
+$$
+- \left[ gb(n-1) - \frac{p+1-(g-1)(b-1)}{2} \right] \ln \Lambda^* > \chi^2_{(g-1)(b-1)p}(\alpha)
+$$
+
+```{r, echo=FALSE}
+kable(cbind(-(t1*t2*(r-1)-((p+1-(t1-1)*(t2-1))/2))*log(lambda), qchisq(.95,(t1-1)*(t2-1)*p)),
+      col.names = c("$\\chi^2$ calculado", "$\\chi^{2}_{12}(.05)$"))
+
+```
+
+Dado que el valor calculado es menor que el percentil $\chi^{2}_{12}(.95)$ no existe evidencia estadística suficiente en contra del supuesto de que no hay efecto de la interacción de los factores.
+
+Ahora procedemos a analizar el efecto factor por factor.
+
+Calculando el $\mathbb{\Lambda}$ para el test del factor 1:
+
+$$
+\Lambda^* = \frac{|\text{SSP}_{\text{res}}|}{|\text{SSP}_{\text{fac1}} + \text{SSP}_{\text{res}}|}
+$$
+
+```{r,echo=FALSE}
+lambda=det(SSPE)/det(SSPF1+SSPE)
+
+lambda
+```
+
+Dada la distribución de $\mathbb{\Lambda}$, rechazamos $H_0$ si:
+
+$$
+- \left[ gb(n-1) - \frac{p+1-(g-1)}{2} \right] \ln \Lambda^* > \chi^2_{(g-1)p}(\alpha)
+$$
+
+```{r, echo=FALSE}
+kable(cbind(-((t1*t2*(r-1))-((p+1-(t1-1))/2))*log(lambda), qchisq(.95,(t1-1)*p)),
+      col.names = c("$\\chi^2$ calculado", "$\\chi^{2}_{4}(.05)$"))
+```
+
+Dado que el valor calculado es menor que el percentil del 95% de una chi-cuadrado con 4 grados de liberta, existe evidencia estadística suficiente para rechazar la hipotesis nula, por tanto, existe efecto de los tratamientos del factor 1.
+
+Calculando el $\mathbb{\Lambda}$ para el test del factor 2:
+
+$$
+\Lambda^* = \frac{|\text{SSP}_{\text{res}}|}{|\text{SSP}_{\text{fac2}} + \text{SSP}_{\text{res}}|}
+$$
+
+```{r, echo=FALSE}
+lambda=det(SSPE)/det(SSPF2+SSPE)
+
+lambda
+```
+
+Dada la distribución de $\mathbb{\Lambda}$:
+
+$$
+- \left[ gb(n-1) - \frac{p+1-(b-1)}{2} \right] \ln \Lambda^* > \chi^2_{(b-1)p}(\alpha)
+$$
+
+```{r, echo=FALSE}
+kable(cbind(-(t1*t2*(r-1)-((p+1-(t2-1))/2))*log(lambda), qchisq(.95,(t2-1)*p)),
+      col.names = c("$\\chi^2$ calculado", "$\\chi^{2}_{6}(.05)$"))
+```
+
+Dado que el valor calculado es menor que el percentil del 95% de una chi-cuadrado con 6 grados de liberta, existe evidencia estadística suficiente para rechazar la hipotesis nula, por tanto, existe efecto de los tratamientos del factor 2.
+
+### d.
+
+Si existen efectos principales, pero no hay interacciones, examina la naturaleza de los efectos principales construyendo intervalos de confianza simultáneos de Bonferroni al 95% para las diferencias de los componentes de los parámetros de efecto del factor.
+
+Para construir los intervalos de confianza de Bonferroni para el tratamiento 1:
+
+$$
+\tau_{\ell i} - \tau_{m i} \ \text{belongs to} \ \left( \bar{x}_{\ell i} - \bar{x}_{m i} \right)\pm t_{\nu} \left( \frac{\alpha}{p g (g-1)} \right) \sqrt{\frac{E_{ii} \cdot 2}{\nu \cdot b n}}  
+$$ Para construir los intervalos de confianza de Bonferroni para el tratamiento 2:
+
+$$
+\beta_{\ell i} - \beta_{m i} \ \text{belongs to} \ \left( \bar{x}_{\ell i} - \bar{x}_{m i} \right)\pm t_{\nu} \left( \frac{\alpha}{p b (b-1)} \right) \sqrt{\frac{E_{ii} \cdot 2}{\nu \cdot g n}}
+$$
+
+donde $v = gb(n - 1)$, $E_{ii}$ is the $i$th diagonal element of $E = SSP_{res}$
+
+```{r, echo=FALSE}
+IC <- matrix(NA, ncol = 2, nrow =(t1*(t1-1)+t2*(t2-1)))  
+colnames(IC) <- c("LI", "LS")
+rownames_IC <- character(nrow(IC))
+
+combinaciones <- combn(1:t1, 2)
+
+fila_actual <- 1
+
+for (comb in 1:ncol(combinaciones)) {
+  j <- combinaciones[1, comb]  # Nivel 1 de la comparación
+  k <- combinaciones[2, comb]  # Nivel 2 de la comparación
+  
+  for (i in 1:p) {
+    # Centro del intervalo
+    center <- get(paste0("f", 1, "_", j, "_b"))[i] - 
+          get(paste0("f", 1, "_", k, "_b"))[i]
+    # Radio del intervalo
+    radio <- abs(qt((1-0.95) / (p * t1 * (t1 - 1)), t1 * t2 * (r - 1)) * 
+             sqrt(SSPE[i, i] * 2 / (t1 * t2 * (r - 1) * t2*r)))
+    
+    # Guardar en la matriz
+    IC[fila_actual, ] <- c(center - radio, center + radio)
+    rownames_IC[fila_actual] <- paste0("$\\tau_{", j, i, "}-\\tau_{", k, i, "}$")
+    fila_actual <- fila_actual + 1
+  }
+}
+
+combinaciones <- combn(1:t2, 2)
+
+for (comb in 1:ncol(combinaciones)) {
+  j <- combinaciones[1, comb]  # Nivel 1 de la comparación
+  k <- combinaciones[2, comb]  # Nivel 2 de la comparación
+  
+  for (i in 1:p) {
+    # Centro del intervalo
+    center <- get(paste0("f", 2, "_", j, "_b"))[i] - 
+          get(paste0("f", 2, "_", k, "_b"))[i]
+    # Radio del intervalo
+    radio <- abs(qt((1-0.95) / (p * t2 * (t2 - 1)), t1 * t2 * (r - 1)) * 
+             sqrt(SSPE[i, i] * 2 / (t1 * t2 * (r - 1) * t1 *r)))
+    
+    # Guardar en la matriz
+    IC[fila_actual, ] <- c(center - radio, center + radio)
+    rownames_IC[fila_actual] <- paste0("$\\beta_{", j, i, "}-\\beta_{", k, i, "}$")
+    fila_actual <- fila_actual + 1
+  }
+}
+rownames(IC) <- rownames_IC
+kable(IC)
+```
+
+Como no se rechazó la prueba de hipotésis para el segundo factor, es claro que todos los intervalos para los $\beta$ contienen al cero. Por su parte, de los intervalos para $\tau$ sólo uno de ellos no contiene al cero y es el de la diferencia entre el primer y tercer nivel del primer factor para la primera variable.
+
+## Ejercicio 6.18
+
+Jolicoeur y Mosimann [12] estudiaron la relación entre el tamaño y la forma de las tortugas pintadas. La Tabla 6.9 contiene sus mediciones de los caparazones de 24 tortugas hembras y 24 tortugas machos.
+
+|                         Female |                               |                                |              Male              |                               |                                |
+|-----------:|:----------:|:----------:|:----------:|:----------:|:----------:|
+| Length <br> $\left(x_1\right)$ | Width <br> $\left(x_2\right)$ | Height <br> $\left(x_3\right)$ | Length <br> $\left(x_1\right)$ | Width <br> $\left(x_2\right)$ | Height <br> $\left(x_3\right)$ |
+|                             98 |              81               |               38               |               93               |              74               |               37               |
+|                            103 |              84               |               38               |               94               |              78               |               35               |
+|                            103 |              86               |               42               |               96               |              80               |               35               |
+|                            105 |              86               |               42               |              101               |              84               |               39               |
+|                            109 |              88               |               44               |              102               |              85               |               38               |
+|                            123 |              92               |               50               |              103               |              81               |               37               |
+|                            123 |              95               |               46               |              104               |              83               |               39               |
+|                            133 |              99               |               51               |              106               |              83               |               39               |
+|                            133 |              102              |               51               |              107               |              82               |               38               |
+|                            133 |              102              |               51               |              112               |              89               |               40               |
+|                            134 |              100              |               48               |              113               |              88               |               40               |
+|                            136 |              102              |               49               |              114               |              86               |               40               |
+|                            138 |              98               |               51               |              116               |              90               |               43               |
+|                            138 |              99               |               51               |              117               |              90               |               41               |
+|                            141 |              105              |               53               |              117               |              91               |               41               |
+|                            147 |              108              |               57               |              119               |              93               |               41               |
+|                            149 |              107              |               55               |              120               |              89               |               40               |
+|                            153 |              107              |               56               |              120               |              93               |               44               |
+|                            155 |              115              |               63               |              121               |              95               |               42               |
+|                            155 |              117              |               60               |              125               |              93               |               45               |
+|                            158 |              115              |               62               |              127               |              96               |               45               |
+|                            159 |              118              |               63               |              128               |              95               |               45               |
+|                            162 |              124              |               61               |              131               |              95               |               46               |
+|                            177 |              132              |               67               |              135               |              106              |               47               |
+
+### a.
+
+Prueba la igualdad de los dos vectores de medias poblacionales utilizando $\alpha = .05$.
+
+```{r, echo=FALSE}
+X <- data.frame(
+  F_Length = c(98, 103, 103, 105, 109, 123, 123, 133, 133, 133, 134, 136, 138, 138, 141, 147, 149, 153, 155, 155, 158, 159, 162, 177),
+  F_Width = c(81, 84, 86, 86, 88, 92, 95, 99, 102, 102, 100, 102, 98, 99, 105, 108, 107, 107, 115, 117, 115, 118, 124, 132),
+  F_Height = c(38, 38, 42, 42, 44, 50, 46, 51, 51, 51, 48, 49, 51, 51, 53, 57, 55, 56, 63, 60, 62, 63, 61, 67),
+  M_Length = c(93, 94, 96, 101, 102, 103, 104, 106, 107, 112, 113, 114, 116, 117, 117, 119, 120, 120, 121, 125, 127, 128, 131, 135),
+  M_Width = c(74, 78, 80, 84, 85, 81, 83, 83, 82, 89, 88, 86, 90, 90, 91, 93, 89, 93, 95, 93, 96, 95, 95, 106),
+  M_Height = c(37, 35, 35, 39, 38, 37, 39, 39, 38, 40, 40, 40, 43, 41, 41, 41, 40, 44, 42, 45, 45, 45, 46, 47)
+)
+
+X<-apply(X, 2, log)
+
+n=nrow(X)
+p=ncol(X)/2
+g=2
+n1=n
+n2=n
+
+x1_barra=colMeans(X)[c(1:3)]
+x2_barra=colMeans(X)[c(4:6)]
+
+S1=var(X[,c(1:3)])
+S2=var(X[,c(4:6)])
+
+Spool=(1/(n1-1+n2-1))*((n1-1)*S1+((n2-1)*S2))
+
+```
+
+Dado que tenemos un tamaño de muestra pequeño, necesitamos de los supuestos de normalidad e igualdad de la matriz de covarianzas:
+
+```{r}
+mvn(X[,c(1:3)], mvnTest = "royston", univariateTest = "SW", desc = FALSE) #Test para las hembras
+mvn(X[,c(4:6)], mvnTest = "royston", univariateTest = "SW", desc = FALSE) #Test para los machos
+```
+
+Para la igualdad de la matriz de covarianzas usamos el test de Box:
+
+Siendo
+
+$$M = \left[ \sum_{\ell} (n_\ell - 1) \right] \ln |\mathbf{S}_{\text{pooled}}| 
+- \sum_{\ell} \left[ (n_\ell - 1) \ln |\mathbf{S}_\ell| \right]$$
+
+$$u = \left[ \sum_{\ell} \frac{1}{n_\ell - 1} - \frac{1}{\sum_{\ell} (n_\ell - 1)} \right] 
+\left[ \frac{2p^2 + 3p - 1}{6(p + 1)(g - 1)} \right]$$
+
+$$C = (1-u)M \sim_{\text{aprox}} \chi^2_{p(p+1)(g-1)}$$
+
+La regla de decisión para el test es, rechazar $H_0$ si:
+
+$$C > \chi^2_{p(p+1)(g-1)}$$
+
+```{r, echo=FALSE}
+M=(n1+n2-2)*log(det(Spool))-(n1-1)*log(det(S1))-(n2-1)*log(det(S2))
+
+u =((1/n1)+(1/n2)+(1/(n1+n2-1)))*((2*p^2+3*p-1)/(6*(p+1)*(g-1)))
+
+C=(1-u)*M
+
+v=(1/2)*p*(p + 1)*(g- 1)
+
+kable(t(c(C, pchisq(C,v, lower.tail = FALSE))), col.names = c("$\\chi^{2}$ calculado", "p-valor"))
+
+```
+
+Por lo cual se rechaza la hipotesis de igualldad de la matriz de covarianzas.
+
+Dado que no tenemos el supuesto de igualdad de varianzas ni tamaño de muestra grande pero sí el supuesto de normalidad estamos en un probelma multivariado de Behrens-Fisher. Por lo cual, de acuerdo con (6-27):
+
+$$T^2 = (\bar{\mathbf{X}}_1 - \bar{\mathbf{X}}_2 - (\boldsymbol{\mu}_1 - \boldsymbol{\mu}_2))' 
+\left[ \frac{1}{n_1} \mathbf{S}_1 + \frac{1}{n_2} \mathbf{S}_2 \right]^{-1} 
+(\bar{\mathbf{X}}_1 - \bar{\mathbf{X}}_2 - (\boldsymbol{\mu}_1 - \boldsymbol{\mu}_2))$$ 
+
+$$T^2 \sim \frac{\nu p}{\nu - p + 1} F_{p, \nu - p + 1}$$
+ 
+ Donde
+
+$$\nu = \frac{p + p^2}{\sum_{i=1}^2 \frac{1}{n_i} \left\{ 
+\text{tr} \left[ \left( \frac{1}{n_i} \mathbf{S}_i \left( \frac{1}{n_1} \mathbf{S}_1 + \frac{1}{n_2} \mathbf{S}_2 \right)^{-1} \right)^2 \right] 
++ \left( \text{tr} \left[ \frac{1}{n_i} \mathbf{S}_i \left( \frac{1}{n_1} \mathbf{S}_1 + \frac{1}{n_2} \mathbf{S}_2 \right)^{-1} \right] \right)^2 
+\right\}}$$
+
+Realizando los calculos:
+
+```{r, echo=FALSE}
+S_comb <- (1 / n1) * S1 + (1 / n2) * S2
+
+T_2=t((x1_barra-x2_barra))%*%solve(S_comb)%*%(x1_barra-x2_barra)
+
+denominador <- 0
+for (i in c(1:g)) {
+  s_i <- if (i == 1) S1 else S2
+  factor <- if (i == 1) (1 / n1) else (1 / n2)
+  
+  term1 <- traza((factor * s_i %*% solve(S_comb))^2)
+  term2 <- (traza((factor * s_i %*% solve(S_comb))))^2
+  
+  denominador <- denominador + factor * (term1 + term2)
+}
+
+v=(p+p^2)/denominador
+
+
+alpha=.95
+
+kable(t(c(T_2,(v*p)*qf(alpha,p,v-p+1)/(v-p+1))), col.names = c("$T^2$", paste0("$F_{3,",round(v-p+1,3),"}(.05)$")))
+
+```
+
+El valor del $T^2$ es bastante mayor que 9.03, por tanto existe evidencia estadística suficiente para rechazar $H_0$
+
+### b.
+
+Si se rechaza la hipótesis en la Parte a, encuentra la combinación lineal de los componentes de las medias más responsable del rechazo $H_{0}$.
+
+Usando $$\hat{\mathbf{a}} \propto \left( S_{\text{pooled}} \right)^{-1} \left( \bar{\mathbf{x}}_1 - \bar{\mathbf{x}}_2 \right)$$
+
+```{r}
+solve(Spool)%*%(x1_barra-x2_barra)
+```
+
+### c.
+
+Encuentra los intervalos de confianza simultáneos para las diferencias de las medias de los componentes. Compara estos resultados con los intervalos de Bonferroni. Sugerencia: Es posible que desees considerar transformaciones logarítmicas de las observaciones.
+
+$$\left( \bar{X}_{1i} - \bar{X}_{2i} \right) \pm \sqrt{\frac{vp F_{v,v-p+1}(.05)}{(v-p+1)}} \sqrt{\left( \frac{1}{n_1}S_1 + \frac{1}{n_2}S_2 \right) _{ii}} 
+\quad \text{for } i = 1, 2, \ldots, p$$
+
+```{r, echo=FALSE}
+IC=matrix(NA, nrow = p, ncol = 2)
+colnames(IC)=c("LI","LS")
+rownames_IC=character(nrow(IC))
+
+for  (j in 1:p){
+  IC[j,1]=(x1_barra-x2_barra)[j]-sqrt((v*p)*qf(alpha,p,v-p+1)/(v-p+1))*sqrt(S_comb[j,j])
+  IC[j,2]=(x1_barra-x2_barra)[j]+sqrt((v*p)*qf(alpha,p,v-p+1)/(v-p+1))*sqrt(S_comb[j,j])
+  rownames_IC[j]=paste0("$\\mu_{1",j,"}-\\mu_{2",j,"}$")
+}
+
+rownames(IC)=rownames_IC
+
+kable(IC, caption = "Intervalos simultaneos del 95% de confianza")
+```
+
+Para calcular los intervalos de confianza de Bonferroni:
+
+$$\mu_{1i} - \mu_{2i} : (\bar{x}_{1i} - \bar{x}_{2i}) \pm t_{n_1+n_2-2} \left( \frac{\alpha}{2p} \right) 
+\sqrt{\left( \frac{1}{n_1} + \frac{1}{n_2} \right) s_{ii, \text{pooled}}}
+$$
+
+```{r, echo=FALSE}
+ICB=matrix(NA, nrow = p, ncol = 2)
+colnames(ICB)=c("LI","LS")
+rownames_IC=character(nrow(ICB))
+
+for  (j in 1:p){
+  ICB[j,1]=(x1_barra-x2_barra)[j]-qt((1-(1-alpha)/(2*p)),n1+n2-2)*sqrt(((1/n1)+(1/n2))*Spool[j,j])
+  ICB[j,2]=(x1_barra-x2_barra)[j]+qt((1-(1-alpha)/(2*p)),n1+n2-2)*sqrt(((1/n1)+(1/n2))*Spool[j,j])
+  rownames_IC[j]=paste0("$\\mu_{1",j,"}-\\mu_{2",j,"}$")
+}
+
+rownames(ICB)=rownames_IC
+
+kable(ICB, caption = "Intervalos de Bonferroni del 95% de confianza")
+```
+
+Es claro que los intervalos de Bonferroni son más precisos bajo el mismo nivel de confianza.
+
+## Ejercicio 6.19
+
+En la primera fase de un estudio sobre el costo de transporte de leche desde las granjas hasta las plantas lácteas, se realizó una encuesta a empresas dedicadas al transporte de leche. Los datos de costos en $X_1$ = fuel, $X_2$ = repair, y $X_3$ = capital, todos medidos por milla, se presentan en la Tabla 6.10, en la página 345, para $n_1$ = 36 gasoline y $n_2$ = 23 camiones diésel.
+
+### a.
+
+Prueba si existen diferencias en los vectores de medias de costos. Establece $\alpha = .01$.
+
+```{r, echo=FALSE}
+g_trucks <- data.frame(
+  x1 = c(16.44, 7.19, 9.92, 4.24, 11.20, 14.25, 13.50, 13.32, 29.11, 12.68, 
+         7.51, 9.90, 10.25, 11.11, 12.17, 10.24, 10.18, 8.88, 12.34, 8.51, 
+         26.16, 12.95, 16.93, 14.70, 10.32, 8.98, 9.70, 12.72, 9.49, 8.22, 
+         13.70, 8.21, 15.86, 9.18, 12.49, 17.32),
+  x2 = c(12.43, 2.70, 1.35, 5.78, 5.05, 5.78, 10.98, 14.27, 15.09, 7.61, 
+         5.80, 3.63, 5.07, 6.15, 14.26, 2.59, 6.05, 2.70, 7.73, 14.02, 
+         17.44, 8.24, 13.37, 10.78, 5.16, 4.49, 11.59, 8.63, 2.16, 7.95, 
+         11.22, 9.85, 11.42, 9.18, 4.67, 6.86),
+  x3 = c(11.23, 3.92, 9.75, 7.78, 10.67, 9.88, 10.60, 9.45, 3.28, 10.23, 
+         8.13, 9.13, 10.17, 7.61, 14.39, 6.09, 12.14, 12.23, 11.68, 12.01, 
+         16.89, 7.18, 17.59, 14.58, 17.00, 4.26, 6.83, 5.59, 6.23, 6.72, 
+         4.91, 8.17, 13.06, 9.49, 11.94, 4.44)
+)
+
+
+d_trucks <- data.frame(
+  x1 = c(8.50, 7.42, 10.28, 10.16, 12.79, 9.60, 6.47, 11.35, 9.15, 9.70, 
+         9.77, 11.61, 9.09, 8.53, 8.29, 15.90, 11.94, 9.54, 10.43, 10.87, 
+         7.13, 11.88, 12.03),
+  x2 = c(12.26, 5.13, 3.32, 14.72, 4.17, 12.72, 8.89, 9.95, 2.94, 5.06, 
+         17.86, 11.75, 13.25, 10.14, 6.22, 12.90, 5.69, 16.77, 17.65, 21.52, 
+         13.22, 12.18, 9.22),
+  x3 = c(9.11, 17.15, 11.23, 5.99, 29.28, 11.00, 19.00, 14.53, 13.68, 20.84, 
+         35.18, 17.00, 20.66, 17.45, 16.38, 19.09, 14.77, 22.66, 10.66, 28.47, 
+         19.44, 21.20, 23.09)
+)
+
+x1_barra=colMeans(g_trucks)
+x2_barra=colMeans(d_trucks)
+
+S1=var(g_trucks)
+S2=var(d_trucks)
+
+n1=nrow(g_trucks)
+n2=nrow(d_trucks)
+p=ncol(d_trucks)
+Spool=(1/(n1-1+n2-1))*((n1-1)*S1+((n2-1)*S2))
+
+alpha=.99
+
+```
+
+Para este caso $T^2 \sim \frac{(n_1 + n_2 - 2)p}{(n_1 + n_2 - p - 1)} F_{p, n_1 + n_2 - p - 1}$
+
+```{r, echo=FALSE}
+T_2=t(x1_barra-x2_barra)%*%solve(((1/n1)+(1/n2))*Spool)%*%(x1_barra-x2_barra)
+
+kable(t(c(T_2,(n1+n2-2)*p*qf(alpha,p,n1+n2-p-1)/(n1+n2-p-1))), col.names = c("$T^2$", paste0((n1+n2-2)*p,"$F_{",p,",",n1+n2-p-1,"}(",alpha,")$")))
+```
+
+Como el valor de la $T^2$ supera a 13, existe evidencia estadística suficiente en contra de $H_0:\mu_{1}-\mu_{2}=0$, es decir, existe diferencia entre el costo medio de transportar leche entre camiones que trabajan con gasonila y diesel.
+
+### b.
+
+Si se rechaza la hipótesis de igualdad de los vectores de costos en la Parte a, encuentra la combinación lineal de los componentes de las medias más responsable del rechazo.
+
+Para hallar la combinación líneal más responsable de rechazar $H_0$:
+
+$$\hat{\mathbf{a}} \propto \left( S_{\text{pooled}} \right)^{-1} \left( \bar{\mathbf{x}}_1 - \bar{\mathbf{x}}_2 \right)$$
+
+```{r}
+solve(Spool)%*%(x1_barra-x2_barra)
+```
+
+### c.
+
+Construye los intervalos de confianza simultáneos al 99% para los pares de componentes de las medias.
+
+¿Cuáles costos, si es que hay alguno, parecen ser significativamente diferentes?
+
+Para hallar los intervalos
+
+$$\left( \bar{X}_{1i} - \bar{X}_{2i} \right) \pm c \sqrt{\left( \frac{1}{n_1} + \frac{1}{n_2} \right) s_{ii, \text{pooled}}} 
+\quad \text{for } i = 1, 2, \ldots, p$$
+
+```{r, echo=FALSE}
+IC=matrix(NA, nrow = p, ncol = 2)
+colnames(IC)=c("LI","LS")
+rownames_IC=character(nrow(IC))
+
+for  (j in 1:p){
+  IC[j,1]=(x1_barra-x2_barra)[j]-sqrt((n1+n2-2)*p*qf(alpha,p,n1+n2-p-1)/(n1+n2-p-1))*sqrt(((1/n1)+(1/n2))*Spool[j,j])
+  IC[j,2]=(x1_barra-x2_barra)[j]+sqrt((n1+n2-2)*p*qf(alpha,p,n1+n2-p-1)/(n1+n2-p-1))*sqrt(((1/n1)+(1/n2))*Spool[j,j])
+  rownames_IC[j]=paste0("$\\mu_{1",j,"}-\\mu_{2",j,"}$")
+}
+
+rownames(IC)=rownames_IC
+
+kable(IC, caption = paste0("Intervalos simultaneos del ",alpha*100,"% de confianza"))
+```
+
+El único intervalo que no contiene al cero es el de la tercera variable, por tanto en los costos en captital es donde la diferencia entre medias es significativa.
+
+### d.
+
+Comenta sobre la validez de las suposiciones utilizadas en tu análisis. Nota, en particular, que las observaciones 9 y 21 para los camiones de gasolina han sido identificadas como valores atípicos multivariados (ver Ejercicio 5.22 y [2]).Repite la Parte a eliminando estas observaciones.Comenta sobre los resultados.
+
+Revisando el supuesto de igualdad de matrices de covarianzas:
+
+Siendo
+
+$$
+M = \left[ \sum_{\ell} (n_\ell - 1) \right] \ln |\mathbf{S}_{\text{pooled}}| 
+- \sum_{\ell} \left[ (n_\ell - 1) \ln |\mathbf{S}_\ell| \right]
+$$
+
+$$
+u = \left[ \sum_{\ell} \frac{1}{n_\ell - 1} - \frac{1}{\sum_{\ell} (n_\ell - 1)} \right] 
+\left[ \frac{2p^2 + 3p - 1}{6(p + 1)(g - 1)} \right]
+$$
+
+$$
+C = (1-u)M \sim_{\text{aprox}} \chi^2_{p(p+1)(g-1)}
+$$
+
+
+La regla de decisión para el test es, rechazar $H_0$ si:
+
+$$C > \chi^2_{p(p+1)(g-1)}$$
+
+```{r, echo=FALSE}
+M=(n1+n2-2)*log(det(Spool))-(n1-1)*log(det(S1))-(n2-1)*log(det(S2))
+
+u =((1/n1)+(1/n2)+(1/(n1+n2-1)))*((2*p^2+3*p-1)/(6*(p+1)*(g-1)))
+
+C=(1-u)*M
+
+v=(1/2)*p*(p + 1)*(g- 1)
+
+kable(t(c(C, pchisq(C,v, lower.tail = FALSE))), col.names = c("$\\chi^{2}$ calculado", "p-valor"))
+
+```
+
+Es claro que se rechaza el supuesto de igualdad de matriz de covarianzas, por tanto la inferencia realizada hasta el momento nos puede llevar a conclusiones erroneas.
+
+Ahora, retirando los outliers:
+
+```{r}
+g_trucks=g_trucks[-c(9,21),]
+
+x1_barra=colMeans(g_trucks)
+
+S1=var(g_trucks)
+
+n1=nrow(g_trucks)
+p=ncol(d_trucks)
+Spool=(1/(n1-1+n2-1))*((n1-1)*S1+((n2-1)*S2))
+
+alpha=.99
+
+```
+
+Revisamos el supuesto de igualdad de matrices de covarianzas nuevamente:
+
+```{r, echo=FALSE}
+M=(n1+n2-2)*log(det(Spool))-(n1-1)*log(det(S1))-(n2-1)*log(det(S2))
+
+u =((1/n1)+(1/n2)+(1/(n1+n2-1)))*((2*p^2+3*p-1)/(6*(p+1)*(g-1)))
+
+C=(1-u)*M
+
+v=(1/2)*p*(p + 1)*(g- 1)
+
+kable(t(c(C, pchisq(C,v, lower.tail = FALSE))), col.names = c("$\\chi^{2}$ calculado", "p-valor"))
+
+```
+
+Nuevamente se ve que para los niveles de significancia usuales se rechaza el supuesto de igualdad de matrices de covarianzas. Como tenemos tamaños de muestra medianamente grandes, podemos usar el resultado 6.4:
+
+$$
+\left[ \bar{\mathbf{x}}_1 - \bar{\mathbf{x}}_2 - (\boldsymbol{\mu}_1 - \boldsymbol{\mu}_2) \right]'
+\left[ \frac{1}{n_1} \mathbf{S}_1 + \frac{1}{n_2} \mathbf{S}_2 \right]^{-1}
+\left[ \bar{\mathbf{x}}_1 - \bar{\mathbf{x}}_2 - (\boldsymbol{\mu}_1 - \boldsymbol{\mu}_2) \right]
+\sim \chi^2_p(\alpha)
+$$ Calculando:
+
+```{r, echo=FALSE}
+T_2=t(x1_barra-x2_barra)%*%solve((1/n1)*S1+(1/n2)*S2)%*%(x1_barra-x2_barra)
+
+kable(t(c(T_2,qchisq(alpha,p))), col.names = c("$T^2$", paste0("$\\chi^2_{",p,"}(",alpha,")$")))
+```
+
+Con lo que concluimos que rechazamos $H_0$ nuevamente con un nivel de significancia del 1%, lo cual es consistente con lo que concluimos en a.
+
+## Ejercicio 6.22
+
+Investigadores interesados en evaluar la función pulmonar en poblaciones no patológicas pidieron a los sujetos correr en una caminadora hasta el agotamiento. Se recolectaron muestras de aire en intervalos definidos y se analizaron los contenidos de gas. Los resultados de 4 medidas de consumo de oxígeno para 25 hombres y 25 mujeres se presentan en la Tabla 6.12, en la página 348. Las variables fueron:
+
+\[
+\begin{aligned}
+X_1 &= \text{resting volume O}_2 \, (\text{L/min}) \\
+X_2 &= \text{resting volume O}_2 \, (\text{mL/kg/min}) \\
+X_3 &= \text{maximum volume O}_2 \, (\text{L/min}) \\
+X_4 &= \text{maximum volume O}_2 \, (\text{mL/kg/min})
+\end{aligned}
+\]
+
+### a.
+Busca diferencias de género probando la igualdad de las medias de los grupos. Utiliza \(\alpha = 0.05\). Si rechazas \(H_0: \mu_1 - \mu_2 = 0\), encuentra la combinación lineal de las medias más responsable del rechazo.
+
+
+```{r, include=FALSE}
+males <- data.frame(
+  X1 = c(0.34, 0.39, 0.48, 0.31, 0.36, 0.33, 0.43, 0.48, 0.21, 0.32, 0.54, 0.32, 0.4, 0.31, 0.44, 0.32, 0.5, 0.36, 0.48, 0.4, 0.42, 0.55, 0.5, 0.34, 0.4),
+  X2 = c(3.71, 5.08, 5.13, 3.95, 5.51, 4.07, 4.77, 6.69, 3.71, 4.35, 7.89, 5.37, 4.95, 4.97, 6.68, 4.8, 6.43, 5.99, 6.3, 6, 6.04, 6.45, 5.55, 4.27, 4.58),
+  X3 = c(2.87, 3.38, 4.13, 3.6, 3.11, 3.95, 4.39, 3.5, 2.82, 3.59, 3.47, 3.07, 4.43, 3.56, 3.86, 3.31, 3.29, 3.1, 4.8, 3.06, 3.85, 5, 5.23, 4, 2.82),
+  X4 = c(30.87, 43.85, 44.51, 46.00, 47.02, 48.50, 48.75, 48.86, 48.92, 48.38, 50.56, 51.15, 55.34, 56.67, 58.49, 49.99, 42.25, 51.70, 63.30, 46.23, 55.08, 58.80, 57.46, 50.35, 32.48)
+)
+females <- data.frame(
+  X1 = c(0.29, 0.28, 0.31, 0.3, 0.28, 0.11, 0.25, 0.26, 0.39, 0.37, 0.31, 0.35, 0.29, 0.33, 0.18, 0.28, 0.44, 0.22, 0.34, 0.3, 0.31, 0.27, 0.66, 0.37, 0.35),
+  X2 = c(5.04, 3.95, 4.88, 5.97, 4.57, 1.74, 4.66, 5.28, 7.32, 6.22, 4.2, 5.1, 4.46, 5.6, 2.8, 4.01, 6.69, 4.55, 5.73, 5.12, 4.77, 5.16, 11.05, 5.23, 5.37),
+  X3 = c(1.93, 2.51, 2.31, 1.9, 2.32, 2.49, 2.12, 1.98, 2.25, 1.71, 2.76, 2.1, 2.5, 3.06, 2.4, 2.58, 3.05, 1.85, 2.43, 2.58, 1.97, 2.03, 2.32, 2.48, 2.25),
+  X4 = c(33.85, 35.82, 36.4, 37.87, 38.3, 39.19, 39.21, 39.94, 42.41, 28.97, 37.8, 31.1, 38.3, 51.8, 37.6, 36.78, 46.16, 38.95, 40.6, 43.69, 30.4, 39.46, 39.34, 34.86, 35.07)
+)
+
+males <- as.matrix.data.frame(males)
+females <- as.matrix.data.frame(females)
+
+```
+
+Con $\alpha=0.05$ se realiza la prueba de hipótesis de las diferencias en los vectores de medias.
+
+```{r, include=FALSE}
+alpha <- 0.95
+n1 <- nrow(males)
+n2 <- nrow(females)
+p <- ncol(males)
+
+xbarra_1 <- colMeans(males)
+xbarra_2 <- colMeans(females)
+
+S1 <- var(males)
+S2 <- var(females)
+
+Spooled <- ((n1-1)*S1 + (n2-1)*S2)/(n1+n2-2)
+
+```
+
+Los vectores de medias muestrales son:
+
+```{r, echo=FALSE}
+xbarra_1
+xbarra_2
+```
+
+La matriz $S_{pool}$:
+
+```{r, echo=FALSE}
+kable(Spooled)
+```
+
+
+Se encuentra el valor del estadístico de prueba y el valor crítico:
+
+```{r, echo=FALSE}
+T2 <- t(xbarra_1 - xbarra_2) %*% solve((1/n1+1/n2)*Spooled) %*% (xbarra_1 - xbarra_2)
+val_cr <- ((n1+n2-2)*p/(n1+n2-p-1))*qf(alpha, p, n1+n2-p-1)
+
+colnames(T2) = "T2 calculado"
+
+kable(t(c(T2,val_cr)), col.names = c("$T^2$", paste0("(",(n-1)*p,"/",n-p,")$F_{",p,",",n-p,"}(",1-alpha,")$")))
+
+
+```
+Como $T^2=96.37322>c^2 =11.00262$, se rechaza la hipótesis nula con un 5% de significancia. Se concluye que las diferencias entre los promedios de las medidas de oxígeno para los hombres y las mujeres son significantes.
+
+Por lo resaltado en la página 289 del libro guía, vemos que el vector $\vec{a}$ que cuantifica la diferencia más grande es aquel que cumple que
+
+$$
+\vec{a} \propto \mathbf{S}^{-1}_{\mathbf{pooled}}(\overline{\mathbf{x}}_1-\overline{\mathbf{x}}_2)
+$$
+
+Así,
+
+```{r}
+solve(Spooled) %*% (xbarra_1-xbarra_2)
+```
+
+
+
+### b.
+Construye los intervalos de confianza simultáneos del 95% para cada \(\mu_{1,i} - \mu_{2,i}, i = 1, 2, 3, 4\). Compara estos resultados con los intervalos de Bonferroni correspondientes.
+
+Realicemos los intervalos de confianza simultáneos para las diferencias de las medias entre las variables de los géneros (hombre - mujer). Es decir, el IC del 95% para 
+
+$$\vec{\mu_1}-\vec{\mu}_2= \begin{pmatrix} \mu_{11} -\mu_{21} \\ \mu_{12}-\mu_{22} \\ \mu_{13} - \mu_{23} \\ \mu_{14} - \mu_{24} \end{pmatrix}$$
+Se usa:
+
+$$\left( \bar{X}_{1i} - \bar{X}_{2i} \right) \pm c \sqrt{\left( \frac{1}{n_1} + \frac{1}{n_2} \right) s_{ii, \text{pooled}}} 
+\quad \text{for } i = 1, 2, \ldots, p$$
+
+Luego, los intervalos simultáneos del 95% de confianza basados en la $T^2$:
+
+```{r, echo=FALSE}
+alpha = 0.05
+
+c = sqrt(((n1+n2-2)*p/(n1+n2-p-1))*qf(1-alpha, p, n1+n2-p-1))
+IC=matrix(NA, ncol=2, nrow=p)
+colnames(IC)=c("LI","LS")
+rownames_IC=character(length = nrow(IC))
+
+for (i in 1:p) {
+  IC[i,1] = (xbarra_1[i] - xbarra_2[i]) - c*sqrt((1/n1+1/n2)*Spooled[i,i])
+  IC[i,2] = (xbarra_1[i] - xbarra_2[i]) + c*sqrt((1/n1+1/n2)*Spooled[i,i])
+  rownames_IC[i]=paste0("$\\mu_{1",i,"}-\\mu_{2",i,"}$")
+}
+rownames(IC)=rownames_IC
+kable(IC, caption = "Intervalos simultaneos basados en la $T^2$")
+
+```
+
+
+
+
+Ahora, para los intervalos Bonferroni del 95% de confianza:
+
+$$\mu_{1i} - \mu_{2i} : (\bar{x}_{1i} - \bar{x}_{2i}) \pm t_{n_1+n_2-2} \left( \frac{\alpha}{2p} \right) 
+\sqrt{\left( \frac{1}{n_1} + \frac{1}{n_2} \right) s_{ii, \text{pooled}}}
+$$
+
+Luego, los intervalos simultáneos Bonferroni del 95% de confianza:
+
+```{r, echo=FALSE}
+alpha = 0.05
+
+t = qt(1-alpha/(2*p), n1+n2-2)
+IC=matrix(NA, ncol=2, nrow=p)
+colnames(IC)=c("LI","LS")
+
+
+for (i in 1:p) {
+  IC[i,1] = (xbarra_1[i] - xbarra_2[i]) - t*sqrt((1/n1+1/n2)*Spooled[i,i])
+  IC[i,2] = (xbarra_1[i] - xbarra_2[i]) + t*sqrt((1/n1+1/n2)*Spooled[i,i])
+}
+rownames(IC)=rownames_IC
+kable(IC, caption = "Intervalos simultaneos de Bonferroni")
+
+
+```
+
+
+
+Que claramente son más angostos que los simultáneos con la $T^2$.
+
+
+### c.
+Los datos en la Tabla 6.12 fueron recolectados de voluntarios estudiantes de posgrado, y por lo tanto, no representan una muestra aleatoria. Comenta sobre las posibles implicaciones de esta información.
+
+El problema de que la muestra no sea aleatoria es que los resultados no son concluyentes para la población. Estos muy posiblemente estén sesgados pues se están considerando sujetos que tienen comportamientos en cierta medida homogéneos con respecto a las variables medidas.
+
+
+##  Ejercicio 6.25
+
+Construye un MANOVA de una vía utilizando los datos de crudo listados en la Tabla 11.7, en la página 662. Construye intervalos de confianza simultáneos del 95% para determinar qué componentes de las medias difieren entre las poblaciones.
+(Podrías considerar realizar transformaciones de los datos para que se ajusten mejor a las suposiciones habituales del MANOVA).
+
+```{r, include=FALSE}
+pi1 <- data.frame(
+  x1 = c(3.9, 2.7, 2.8, 3.1, 3.5, 3.9, 2.7),
+  x2 = c(51.0, 49.0, 36.0, 45.0, 46.0, 43.0, 35.0),
+  x3 = c(0.20, 0.07, 0.30, 0.08, 0.10, 0.07, 0.00),
+  x4 = c(7.06, 7.14, 7.00, 7.20, 7.81, 6.25, 5.11),
+  x5 = c(12.19, 12.23, 11.30, 13.01, 12.63, 10.42, 9.00)
+)
+
+
+pi2 <- data.frame(
+  x1 = c(5.0, 3.4, 1.2, 8.4, 4.2, 4.2, 3.9, 3.9, 7.3, 4.4, 3.0),
+  x2 = c(47.0, 32.0, 12.0, 17.0, 36.0, 35.0, 41.0, 36.0, 32.0, 46.0, 30.0),
+  x3 = c(0.07, 0.20, 0.00, 0.07, 0.50, 0.50, 0.10, 0.07, 0.30, 0.07, 0.00),
+  x4 = c(7.06, 5.82, 5.54, 6.31, 9.25, 5.69, 5.63, 6.19, 8.02, 7.54, 5.12),
+  x5 = c(6.10, 4.69, 3.15, 4.55, 4.95, 2.22, 2.94, 2.27, 12.92, 5.76, 10.77)
+)
+
+pi3 <- data.frame(
+  x1 = c(6.3, 1.7, 7.3, 7.8, 7.8, 7.8, 9.5, 7.7, 11.0, 8.0, 8.4, 10.0, 7.3, 9.5, 8.4, 8.4, 9.5, 7.2, 4.0, 6.7, 9.0, 7.8, 4.5, 6.2, 5.6, 9.0, 8.4, 9.5, 9.0, 6.2, 7.3, 3.6, 6.2, 7.3, 4.1, 5.4, 5.0, 6.2),
+  x2 = c(13.0, 5.6, 24.0, 18.0, 25.0, 26.0, 17.0, 14.0, 20.0, 14.0, 18.0, 18.0, 15.0, 22.0, 15.0, 17.0, 25.0, 22.0, 12.0, 52.0, 27.0, 29.0, 41.0, 34.0, 20.0, 17.0, 20.0, 19.0, 20.0, 16.0, 20.0, 15.0, 34.0, 22.0, 29.0, 29.0, 34.0, 27.0),
+  x3 = c(0.50, 1.00, 0.00, 0.50, 0.70, 1.00, 0.05, 0.30, 0.50, 0.30, 0.20, 0.10, 0.05, 0.30, 0.20, 0.20, 0.50, 1.00, 0.50, 0.50, 0.30, 1.50, 0.50, 0.70, 0.50, 0.20, 0.10, 0.50, 0.50, 0.05, 0.50, 0.70, 0.07, 0.00, 0.70, 0.20, 0.70, 0.30),
+  x4 = c(4.24, 5.69, 4.34, 3.92, 5.39, 5.02, 3.52, 4.65, 4.27, 4.32, 4.38, 3.06, 3.76, 3.98, 5.02, 4.42, 4.44, 4.70, 5.71, 4.80, 3.69, 6.72, 3.33, 7.56, 5.07, 4.39, 3.74, 3.72, 5.97, 4.23, 4.39, 7.00, 4.84, 4.13, 5.78, 4.64, 4.21, 3.97),
+  x5 = c(8.27, 4.64, 2.99, 6.09, 6.20, 2.50, 5.71, 8.63, 8.40, 7.87, 7.98, 7.67, 6.84, 5.02, 10.12, 8.25, 5.95, 3.49, 6.32, 3.20, 3.30, 5.75, 2.27, 6.93, 6.70, 8.33, 3.77, 7.37, 11.17, 4.18, 3.50, 4.82, 2.37, 2.70, 7.76, 2.65, 6.50, 2.97)
+)
+
+
+X <- rbind(pi1, pi2, pi3)
+
+
+```
+
+Con esta información se construye MANOVA de una vía.
+
+```{r}
+p = 5
+
+# Tamaños
+
+g <- 3
+n1 <- nrow(pi1)
+n2 <- nrow(pi2)
+n3 <- nrow(pi3)
+
+n <- c(n1, n2, n3)
+
+# Medias por grupo
+
+xbarra_1 <- colMeans(pi1)
+xbarra_2 <- colMeans(pi2)
+xbarra_3 <- colMeans(pi3)
+
+xbarra_n <- cbind(xbarra_1, xbarra_2, xbarra_3)
+
+# Media general
+xbarra <- colMeans(X)
+
+
+# Matriz varianzas y covarianzas por grupo
+
+S1 <- var(pi1)
+S2 <- var(pi2)
+S3 <- var(pi3)
+
+```
+```{r}
+B <- n[1]*(xbarra_n[,1]-xbarra) %*% t((xbarra_n[,1]-xbarra))
+
+for (i in 2:3) {
+  B <- B + n[i]*(xbarra_n[,i]-xbarra) %*% t((xbarra_n[ ,i]-xbarra))
+}
+
+W <- (n1-1)*S1 + (n2-1)*S2 + (n3-1)*S3
+
+Bdf <- g-1
+Wdf <- sum(n) - g
+```
+
+Entonces se tiene que las matrices son
+
+```{r, echo=FALSE}
+kable(B, caption = "Matriz B")
+kable(W,caption = "Matriz W")
+```
+Y la suma total:
+```{r, echo=FALSE}
+kable(W+B, caption = "Matriz W+B")
+
+Totaldf <- sum(n) - 1
+```
+
+Así, hallamos el lambda de Wilks:
+
+```{r}
+(wilkslambda <- det(W)/det(B+W))
+```
+
+Según la tabla del libro (pág. 303), con $p\geq1$ y $g=3$,
+
+\[
+\left( \frac{\sum n_\ell - p - 2}{p} \right) 
+\left( \frac{1 - \sqrt{\Lambda^*}}{\sqrt{\Lambda^*}} \right) 
+\sim F_{2p, 2 \left( \sum n_\ell - p - 2 \right)}
+\]
+
+Así, 
+
+```{r, echo=FALSE}
+alpha <- 0.05
+
+Fc <- ((sum(n)-p-2)/p)*((1-sqrt(wilkslambda))/sqrt(wilkslambda))
+
+val_crit <- qf(1-alpha, 2*p, 2*(sum(n)-p-2))
+
+kable(t(c(Fc,val_crit)),col.names = c("$F$ calculado", "Valor critico"))
+```
+Se rechaza la hipótesis nula con una significancia del 5% pues $F > 1.928687$. Esto quiere decir que hay diferencias significativas entre los tratamientos.
+
+#Ejercicio 6.28
+
+
+Dos especies de moscas mordedoras (género \textit{Leptoconops}) son tan similares morfológicamente que durante muchos años se pensó que eran la misma especie. Se encontraron diferencias biológicas como las proporciones de sexos de las moscas emergentes y los hábitos de mordedura.
+
+¿Los datos taxonómicos listados en parte en la Tabla 6.15 en la página 352 y en el sitio web \url{www.prenhall.com/statistics} indican alguna diferencia entre las dos especies \textit{L. carteri} y \textit{L. torrens}?
+
+Realice una prueba de igualdad de los vectores de medias poblacionales utilizando $\alpha = 0.05$. Si se rechaza la hipótesis de igualdad de vectores de medias, determine los componentes de la media (o combinaciones lineales de los componentes de la media) que son los más responsables del rechazo de $H_0$.
+
+Justifique su uso de métodos basados en la teoría normal para estos datos.
+
+## Ejercicio 6.29
+
+Utilizando los datos sobre el contenido mineral óseo en la Tabla 1.8, investiga la igualdad entre los huesos dominantes y no dominantes.
+```{r}
+# Crear el dataframe manualmente en R
+X <- data.frame(
+  Subject_number = 1:25,
+  Dominant_radius = c(1.103, 0.842, 0.925, 0.857, 0.795, 0.787, 0.933, 0.799, 0.945, 0.921, 0.792, 0.815, 0.755, 0.880, 0.900, 0.764, 0.733, 0.932, 0.856, 0.890, 0.688, 0.940, 0.493, 0.835, 0.915),
+  Radius = c(1.052, 0.859, 0.873, 0.744, 0.809, 0.779, 0.880, 0.851, 0.876, 0.906, 0.825, 0.751, 0.724, 0.866, 0.838, 0.757, 0.748, 0.898, 0.786, 0.950, 0.532, 0.850, 0.616, 0.752, 0.936),
+  Dominant_humerus = c(2.139, 1.873, 1.887, 1.739, 1.734, 1.509, 1.695, 1.740, 1.811, 1.954, 1.624, 2.204, 1.508, 1.786, 1.902, 1.743, 1.863, 2.028, 1.390, 2.187, 1.650, 2.334, 1.037, 1.509, 1.971),
+  Humerus = c(2.238, 1.741, 1.809, 1.547, 1.715, 1.474, 1.656, 1.777, 1.759, 2.009, 1.657, 1.846, 1.458, 1.811, 1.606, 1.794, 1.869, 2.032, 1.324, 2.087, 1.378, 2.225, 1.268, 1.422, 1.869),
+  Dominant_ulna = c(0.873, 0.590, 0.767, 0.706, 0.549, 0.782, 0.737, 0.618, 0.853, 0.823, 0.686, 0.678, 0.662, 0.810, 0.723, 0.586, 0.672, 0.836, 0.578, 0.758, 0.533, 0.757, 0.546, 0.618, 0.869),
+  Ulna = c(0.872, 0.744, 0.713, 0.674, 0.654, 0.571, 0.803, 0.682, 0.777, 0.765, 0.666, 0.546, 0.595, 0.819, 0.677, 0.541, 0.752, 0.805, 0.610, 0.718, 0.482, 0.731, 0.615, 0.664, 0.868)
+)
+
+# Mostrar el dataframe
+kable(X)
+
+```
+
+### a. 
+Realiza la prueba usando \(\alpha = 0.05\).
+
+```{r echo=FALSE}
+# Crear el dataframe con los datos
+X <- data.frame(
+  Dominant_radius = c(1.103, 0.842, 0.925, 0.857, 0.795, 0.787, 0.933, 0.799, 0.945, 0.921,
+                      0.792, 0.815, 0.755, 0.880, 0.900, 0.764, 0.733, 0.932, 0.856, 0.890,
+                      0.688, 0.940, 0.493, 0.835, 0.915),
+  Radius = c(1.052, 0.859, 0.873, 0.744, 0.809, 0.779, 0.880, 0.851, 0.876, 0.906,
+             0.825, 0.751, 0.724, 0.866, 0.838, 0.757, 0.748, 0.898, 0.786, 0.950,
+             0.532, 0.850, 0.616, 0.752, 0.936),
+  Dominant_humerus = c(2.139, 1.873, 1.887, 1.739, 1.734, 1.509, 1.695, 1.740, 1.811, 1.954,
+                       1.624, 2.204, 1.508, 1.786, 1.902, 1.743, 1.863, 2.028, 1.390, 2.187,
+                       1.650, 2.334, 1.037, 1.509, 1.971),
+  Humerus = c(2.238, 1.741, 1.809, 1.547, 1.715, 1.474, 1.656, 1.777, 1.759, 2.009,
+              1.657, 1.846, 1.458, 1.811, 1.606, 1.794, 1.869, 2.032, 1.324, 2.087,
+              1.378, 2.225, 1.268, 1.422, 1.869),
+  Dominant_ulna = c(0.873, 0.590, 0.767, 0.706, 0.549, 0.782, 0.737, 0.618, 0.853, 0.823,
+                    0.686, 0.678, 0.662, 0.810, 0.723, 0.586, 0.672, 0.836, 0.578, 0.758,
+                    0.533, 0.757, 0.546, 0.618, 0.869),
+  Ulna = c(0.872, 0.744, 0.713, 0.674, 0.654, 0.571, 0.803, 0.682, 0.777, 0.765,
+           0.666, 0.546, 0.595, 0.819, 0.677, 0.541, 0.752, 0.805, 0.610, 0.718,
+           0.482, 0.731, 0.615, 0.664, 0.868)
+)
+
+# Calcular las diferencias entre las variables dominantes y no dominantes
+differences <- X[, c("Dominant_radius", "Dominant_humerus", "Dominant_ulna")] -
+  X[, c("Radius", "Humerus", "Ulna")]
+
+# Calcular x_bar y la matriz de covarianza
+x_bar <- colMeans(differences)
+cov_matrix <- cov(differences)
+```
+Vector de medias:
+```{r}
+print(x_bar)
+```
+Matriz de covarianzas
+```{r}
+print(cov_matrix)
+```
+**Prueba $T^2$**
+
+```{r}
+n <- 25 # Tamaño de la muestra
+p <- length(x_bar) # Número de variables
+alpha <- 0.05 # Nivel de significancia
+
+# (a) Prueba de Hotelling
+T2 <- n * t(x_bar) %*% solve(cov_matrix) %*% x_bar
+T2 <- as.numeric(T2) # Convertir a escalar
+F_critical <- (p * (n - 1)) / (n - p) * qf(1 - alpha, df1 = p, df2 = n - p)
+reject_null <- T2 > F_critical
+
+cat("Hotelling's T^2 =", round(T2, 3), "\n")
+cat("Critical value =", round(F_critical, 3), "\n")
+
+```
+El valor calculado de \(T^2\) es \(5.946\), mientras que el valor crítico es \(9.979\). Como \(T^2 < 9.979\), no se rechaza la hipótesis nula \(H_0: \mu_1 - \mu_2 = 0\). Esto significa que no hay evidencia estadística suficiente para concluir que las medias de las diferencias entre los huesos dominantes y no dominantes sean significativamente diferentes al nivel de significancia del 5\%.
+
+### b. 
+
+Construye intervalos de confianza simultáneos al 95% para las diferencias de medias.
+Usando:
+
+$$\bar{d}_i \pm \sqrt{\frac{p(n-1)}{n-p} \cdot F_{1-\alpha, p, n-p} \cdot \frac{s^2_{d_i}}{n}}
+$$
+
+
+```{r}
+# (b) Intervalos de confianza simultáneos
+critical_value <- sqrt(F_critical * diag(cov_matrix) / n)
+simultaneous_CI <- data.frame(
+  Lower = x_bar - critical_value,
+  Upper = x_bar + critical_value
+)
+
+kable(simultaneous_CI)
+```
+
+
+### c.
+Construye intervalos simultáneos de Bonferroni al 95\% y compáralos con los intervalos de la parte (b).
+
+$$\bar{d}_i \pm t_{n-1}\left(\frac{\alpha}{2p}\right) \cdot \sqrt{\frac{s^2_{d_i}}{n}}$$
+
+
+
+```{r}
+# (c) Intervalos de Bonferroni
+bonferroni_alpha <- alpha / p
+t_critical_bonferroni <- qt(1 - bonferroni_alpha / 2, df = n - 1)
+bonferroni_CI <- data.frame(
+  Lower = x_bar - t_critical_bonferroni * sqrt(diag(cov_matrix) / n),
+  Upper = x_bar + t_critical_bonferroni * sqrt(diag(cov_matrix) / n)
+)
+
+kable(bonferroni_CI)
+
+```
+
+Los intervalos de confianza simultáneos y de Bonferroni para las diferencias incluyen el valor 0 en todas las variables. Esto indica que, simultáneamente, no hay diferencias significativas entre los huesos dominantes y no dominantes.
+
+## Ejercicio 6.30
+La Tabla 6.16 en la página 353 contiene los contenidos minerales óseos para los primeros 24 sujetos de la Tabla 1.8, 1 año después de su participación en un programa experimental. Compara los datos de ambas tablas para determinar si ha habido pérdida ósea.
+
+### a. 
+Realiza la prueba utilizando \(\alpha = 0.05\).
+```{r echo=FALSE}
+# Datos iniciales
+initial <- data.frame(
+  x1 = c(1.103, 0.842, 0.925, 0.857, 0.795, 0.787, 0.933, 0.799, 0.945, 0.921, 0.792, 0.815, 
+         0.755, 0.880, 0.900, 0.764, 0.733, 0.932, 0.856, 0.890, 0.688, 0.940, 0.493, 0.835),
+  x2 = c(1.052, 0.859, 0.873, 0.744, 0.809, 0.779, 0.880, 0.851, 0.876, 0.906, 0.825, 0.751, 
+         0.724, 0.866, 0.838, 0.757, 0.748, 0.898, 0.786, 0.950, 0.532, 0.850, 0.616, 0.752),
+  x3 = c(2.139, 1.873, 1.887, 1.739, 1.734, 1.509, 1.695, 1.740, 1.811, 1.954, 1.624, 2.204,
+         1.508, 1.786, 1.902, 1.743, 1.863, 2.028, 1.390, 2.187, 1.650, 2.334, 1.037, 1.509),
+  x4 = c(2.238, 1.741, 1.809, 1.547, 1.715, 1.474, 1.656, 1.777, 1.759, 2.009, 1.657, 1.846,
+         1.458, 1.811, 1.606, 1.794, 1.869, 2.032, 1.324, 2.087, 1.378, 2.225, 1.268, 1.422),
+  x5 = c(0.873, 0.590, 0.767, 0.706, 0.549, 0.782, 0.737, 0.618, 0.853, 0.823, 0.686, 0.678,
+         0.662, 0.810, 0.723, 0.586, 0.672, 0.836, 0.578, 0.758, 0.533, 0.757, 0.546, 0.618),
+  x6 = c(0.872, 0.744, 0.713, 0.674, 0.654, 0.571, 0.803, 0.682, 0.777, 0.765, 0.668, 0.546,
+         0.595, 0.819, 0.667, 0.541, 0.752, 0.805, 0.610, 0.718, 0.482, 0.731, 0.615, 0.664)
+)
+
+# Datos después de 1 año
+after <- data.frame(
+  x1 = c(1.027, 0.857, 0.875, 0.873, 0.811, 0.640, 0.947, 0.886, 0.991, 0.977, 0.825, 0.851, 
+         0.770, 0.912, 0.905, 0.756, 0.765, 0.932, 0.843, 0.879, 0.673, 0.949, 0.463, 0.776),
+  x2 = c(1.051, 0.817, 0.880, 0.698, 0.813, 0.734, 0.865, 0.806, 0.923, 0.925, 0.826, 0.765, 
+         0.730, 0.875, 0.826, 0.727, 0.764, 0.914, 0.782, 0.906, 0.537, 0.900, 0.637, 0.743),
+  x3 = c(2.268, 1.718, 1.953, 1.668, 1.643, 1.396, 1.851, 1.742, 1.931, 1.933, 1.609, 2.352,
+         1.470, 1.846, 1.842, 1.747, 1.923, 2.190, 1.242, 2.164, 1.573, 2.130, 1.041, 1.442),
+  x4 = c(2.246, 1.710, 1.756, 1.443, 1.661, 1.378, 1.686, 1.815, 1.776, 2.106, 1.651, 1.980,
+         1.420, 1.809, 1.579, 1.860, 1.941, 1.997, 1.228, 1.999, 1.330, 2.159, 1.265, 1.411),
+  x5 = c(0.869, 0.602, 0.765, 0.761, 0.551, 0.753, 0.708, 0.687, 0.844, 0.869, 0.654, 0.692,
+         0.670, 0.823, 0.746, 0.656, 0.693, 0.883, 0.577, 0.802, 0.540, 0.804, 0.570, 0.585),
+  x6 = c(0.964, 0.689, 0.738, 0.698, 0.619, 0.515, 0.787, 0.715, 0.656, 0.789, 0.726, 0.526,
+         0.580, 0.773, 0.729, 0.506, 0.740, 0.785, 0.627, 0.769, 0.498, 0.779, 0.634, 0.640)
+)
+
+# Calcular diferencias
+differences <- after - initial
+
+# Tamaño de muestra y número de variables
+n <- nrow(differences)
+p <- ncol(differences)
+
+kable(initial)
+kable(after)
+```
+
+Vector de medias:
+
+```{r}
+
+# Vector de medias
+(mean_vector <- colMeans(differences))
+```
+
+Matriz de covarianzas
+```{r}
+
+# Matriz de covarianzas muestral
+cov_matrix <- cov(differences)
+
+```
+```{r}
+# (a) Hotelling's T²
+T2 <- n * t(mean_vector) %*% solve(cov_matrix) %*% mean_vector
+(T2 <- as.numeric(T2))
+
+# Valor crítico de F
+(F_critical <- (p * (n - 1)) / (n - p) * qf(0.95, df1 = p, df2 = n - p))
+```
+El valor calculado del estadístico de prueba Hotelling's \(T^2\) es \(T^2 = 8.947\). El valor crítico de la distribución \(F\) es \(F_{\text{crítico}} = 20.403\), con un nivel de significancia de \(\alpha = 0.05\). 
+ado que \(T^2 < F_{\text{crítico}}\), no se rechaza la hipótesis nula \(H_0\). Esto indica que no hay evidencia estadística suficiente para concluir que existen diferencias significativas en las medias de las variables después de un año.
+
+
+### b. 
+
+Construye intervalos de confianza simultáneos al 95\% para las diferencias de medias.
+
+
+```{r}
+
+# (b) Intervalos simultáneos
+T2_constant <- sqrt(F_critical * diag(cov_matrix) / n)
+simultaneous_intervals <- data.frame(
+  Lower = mean_vector - T2_constant,
+  Upper = mean_vector + T2_constant
+)
+
+kable(simultaneous_intervals)
+
+```
+
+### c. 
+Construye intervalos simultáneos de Bonferroni al 95\% y compara estos con los intervalos de la parte (b).
+
+```{r}
+alpha <- 0.05
+bonferroni_alpha <- alpha / p
+t_critical <- qt(1 - bonferroni_alpha / 2, df = n - 1)
+std_error <- sqrt(diag(cov_matrix) / n)
+bonferroni_intervals <- data.frame(
+  Lower = mean_vector - t_critical * std_error,
+  Upper = mean_vector + t_critical * std_error
+)
+
+kable(bonferroni_intervals)
+```
+
+
+### Ejercicio 6.31
+
+Los cacahuetes son un cultivo importante en partes del sur de los Estados Unidos. En un esfuerzo por desarrollar plantas mejoradas, los científicos agrícolas rutinariamente comparan variedades con respecto a varias variables. Los datos para un experimento de dos factores se presentan en la Tabla 6.17 en la página 354. Tres variedades (5, 6 y 8) se cultivaron en dos ubicaciones geográficas (1 y 2) y, en este caso, se midieron tres variables que representan el rendimiento y dos importantes características del grano. Las tres variables son:
+
+$$X_1 = \text{Rendimiento (peso de la parcela)}$$
+
+$$X_2 = \text{Granos maduros sanos (peso en gramos, máximo de 250 gramos)}$$
+
+$$X_3 = \text{Tamaño de la semilla (peso en gramos de 100 semillas)}$$
+
+Hubo dos repeticiones del experimento.
+
+### a.
+Realiza un MANOVA de dos factores usando los datos de la Tabla 6.17. Evalúa el efecto de la ubicación, el efecto de la variedad y la interacción ubicación-variedad. Usa $\alpha = 0.05$.
+```{r}
+# Crear el dataframe con los datos de la Tabla 6.17
+peanut_data <- data.frame(
+  Location = factor(c(1, 1, 2, 2, 1, 1, 2, 2, 1, 1, 2, 2)),
+  Variety = factor(c(5, 5, 5, 5, 6, 6, 6, 6, 8, 8, 8, 8)),
+  X1_Yield = c(195.3, 194.3, 189.7, 180.4, 203.0, 195.9, 202.7, 197.6, 193.5, 187.0, 201.5, 200.0),
+  X2_SdMatKer = c(153.1, 167.7, 139.5, 121.1, 156.8, 166.0, 166.1, 161.8, 164.5, 165.1, 166.8, 173.8),
+  X3_SeedSize = c(51.4, 53.7, 55.5, 44.4, 49.8, 45.8, 60.4, 54.1, 57.8, 58.6, 65.0, 67.2)
+)
+
+# Realizar MANOVA de dos factores
+manova_results <- manova(cbind(X1_Yield, X2_SdMatKer, X3_SeedSize) ~ Location * Variety, data = peanut_data)
+
+# Mostrar resultados MANOVA globales
+cat("Resultados MANOVA Globales:\n")
+print(summary(manova_results, test = "Wilks"))
+print(summary(manova_results, test = "Pillai"))
+print(summary(manova_results, test = "Hotelling-Lawley"))
+print(summary(manova_results, test = "Roy"))
+
+# Descomponer MANOVA para efectos individuales y de interacción
+cat("\n--- Efecto de Location (Factor 1) ---\n")
+summary_location <- manova(cbind(X1_Yield, X2_SdMatKer, X3_SeedSize) ~ Location, data = peanut_data)
+print(summary(summary_location, test = "Wilks"))
+
+cat("\n--- Efecto de Variety (Factor 2) ---\n")
+summary_variety <- manova(cbind(X1_Yield, X2_SdMatKer, X3_SeedSize) ~ Variety, data = peanut_data)
+print(summary(summary_variety, test = "Wilks"))
+
+cat("\n--- Efecto de Interacción Location × Variety ---\n")
+summary_interaction <- manova(cbind(X1_Yield, X2_SdMatKer, X3_SeedSize) ~ Location:Variety, data = peanut_data)
+print(summary(summary_interaction, test = "Wilks"))
+
+# Descomponer en ANOVA individuales para cada variable
+cat("\n--- Efectos Individuales (ANOVA para cada variable) ---\n")
+summary_individual <- summary.aov(manova_results)
+print(summary_individual)
+
+```
+
+
+### b.
+Analiza los residuos de la Parte (a). ¿Se cumplen las suposiciones habituales del MANOVA? Discute.
+```{r}
+
+# Obtener valores ajustados (predichos) y residuos del modelo MANOVA ajustado
+fitted_values <- fitted(manova_results)  # Valores ajustados
+residuals_manova <- residuals(manova_results)  # Residuos
+
+# Combinar los valores ajustados y residuos en un DataFrame
+results <- data.frame(
+  CODE = rep(letters[1:6], each = 2),  # Código 'a' a 'f' con duplicación
+  Location = peanut_data$Location,
+  Variety = peanut_data$Variety,
+  PRED1 = round(fitted_values[, 1], 2),
+  RES1 = round(residuals_manova[, 1], 2),
+  PRED2 = round(fitted_values[, 2], 2),
+  RES2 = round(residuals_manova[, 2], 2),
+  PRED3 = round(fitted_values[, 3], 2),
+  RES3 = round(residuals_manova[, 3], 2)
+)
+
+# Mostrar la tabla de valores ajustados y residuos
+print(results)
+
+# Gráficos Q-Q individuales para cada variable dependiente
+# Configurar la salida en gráficos individuales
+par(mfrow = c(1, 1))  # Restaurar configuración a un gráfico por ventana
+
+# Q-Q Plot para X1_Yield
+qqnorm(residuals_manova[, 1], main = "Q-Q Plot: Residuals for Yield (X1)", ylab = "Residuals (X1_Yield)")
+qqline(residuals_manova[, 1])
+
+# Q-Q Plot para X2_SdMatKer
+qqnorm(residuals_manova[, 2], main = "Q-Q Plot: Residuals for Sound Mature Kernels (X2)", ylab = "Residuals (X2_SdMatKer)")
+qqline(residuals_manova[, 2])
+
+# Q-Q Plot para X3_SeedSize
+qqnorm(residuals_manova[, 3], main = "Q-Q Plot: Residuals for Seed Size (X3)", ylab = "Residuals (X3_SeedSize)")
+qqline(residuals_manova[, 3])
+```
+
+Si miramos los QQ, se ajustan aproximadamente a la recta, esto implica que se cumple el supuesto de Normalidad. Aunque X2 tiene algunos residuos que son grandes en valor absoluto (ubicación 2,variedad 5), estos no afecta significativamente la normalidad global, es decir si  evaluamos las suposiciones de MANOVA, las cuales son normalidad y homogeneidad de varianzas-covarianzas, se evidencia que estánsastisfechas.
+
+### c.
+Usando los resultados de la Parte (a), ¿podemos concluir que los efectos de la ubicación y/o de la variedad son aditivos? Si no es así, ¿el efecto de interacción aparece en algunas variables pero no en otras? Verifica esto ejecutando tres ANOVAs univariados de dos factores separados.
+```{r}
+
+# Función auxiliar para calcular estadísticas adicionales (R-Square, Coeff Var, etc.)
+calculate_anova_stats <- function(anova_model, response_variable) {
+  # Extraer suma de cuadrados
+  ss_total <- sum(anova_model[[1]]$`Sum Sq`)
+  ss_model <- sum(anova_model[[1]]$`Sum Sq`[1:(nrow(anova_model[[1]]) - 1)])
+  ss_error <- anova_model[[1]]$`Sum Sq`[nrow(anova_model[[1]])]
+  
+  # Calcular R-Square
+  r_square <- ss_model / ss_total
+  
+  # Calcular Root MSE
+  mse <- ss_error / anova_model[[1]]$Df[nrow(anova_model[[1]])]
+  root_mse <- sqrt(mse)
+  
+  # Media de la variable dependiente
+  mean_response <- mean(response_variable)
+  
+  # Coefficient of Variation
+  coeff_var <- (root_mse / mean_response) * 100
+  
+  # Imprimir estadísticas
+  cat("\n--- Estadísticas Adicionales ---\n")
+  cat("R-Square:", round(r_square, 6), "\n")
+  cat("Coefficient of Variation (%):", round(coeff_var, 6), "\n")
+  cat("Root MSE:", round(root_mse, 6), "\n")
+  cat("Media:", round(mean_response, 6), "\n")
+}
+
+```
+ANOVA Univariado para Yield (X1):
+```{r}
+# ANOVA univariado para cada variable dependiente con estadísticas adicionales
+
+anova_X1 <- aov(X1_Yield ~ Location * Variety, data = peanut_data)
+summary_X1 <- summary(anova_X1)
+print(summary_X1)
+calculate_anova_stats(summary_X1, peanut_data$X1_Yield)
+```
+ANOVA Univariado para Sound Mature Kernels (X2):
+```{r}
+anova_X2 <- aov(X2_SdMatKer ~ Location * Variety, data = peanut_data)
+summary_X2 <- summary(anova_X2)
+print(summary_X2)
+calculate_anova_stats(summary_X2, peanut_data$X2_SdMatKer)
+```
+ANOVA Univariado para Seed Size (X3):
+```{r}
+anova_X3 <- aov(X3_SeedSize ~ Location * Variety, data = peanut_data)
+summary_X3 <- summary(anova_X3)
+print(summary_X3)
+calculate_anova_stats(summary_X3, peanut_data$X3_SeedSize)
+
+
+```
+
+
+
+### d.
+Números más grandes corresponden a mejores características de rendimiento y calidad del grano. Usando los datos de la ubicación 2, ¿podemos concluir que una variedad es mejor que las otras dos para cada característica? Discute tu respuesta usando intervalos simultáneos de Bonferroni al 95% para pares de variedades.
+
+
+```{r}
+# Datos de la tabla para la ubicación 2
+data_location2 <- data.frame(
+  Variety = factor(c(5, 5, 6, 6, 8, 8)),  # Variedades
+  Yield = c(189.7, 180.4, 202.7, 197.6, 201.5, 200.0),       # X1: Rendimiento
+  SdMatKer = c(139.5, 121.1, 166.1, 164.5, 186.5, 173.8),    # X2: Granos maduros
+  SeedSize = c(55.5, 44.4, 60.4, 57.8, 65.0, 67.2)           # X3: Tamaño de semilla
+)
+
+# Modelos lineales para cada variable dependiente
+model_Yield <- lm(Yield ~ Variety, data = data_location2)
+model_SdMatKer <- lm(SdMatKer ~ Variety, data = data_location2)
+model_SeedSize <- lm(SeedSize ~ Variety, data = data_location2)
+
+# Comparaciones de Bonferroni usando la función glht
+bonf_Yield <- glht(model_Yield, linfct = mcp(Variety = "Tukey"))
+bonf_SdMatKer <- glht(model_SdMatKer, linfct = mcp(Variety = "Tukey"))
+bonf_SeedSize <- glht(model_SeedSize, linfct = mcp(Variety = "Tukey"))
+
+# Ajuste Bonferroni para las comparaciones
+summary_Yield <- summary(bonf_Yield, test = adjusted("bonferroni"))
+summary_SdMatKer <- summary(bonf_SdMatKer, test = adjusted("bonferroni"))
+summary_SeedSize <- summary(bonf_SeedSize, test = adjusted("bonferroni"))
+```
+Comparaciones Bonferroni para el Rendimiento (X1):
+```{r}
+# Mostrar resultados
+print(summary_Yield)
+```
+Comparaciones Bonferroni para los Granos Maduros Sanos (X2):
+```{r}
+print(summary_SdMatKer)
+```
+Comparaciones Bonferroni para el Tamaño de la Semilla (X3):
+```{r}
+print(summary_SeedSize)
+```
+
+## Ejercicio 6.33
+Consulte el Ejercicio 6.32. Los datos de la Tabla 6.18 son mediciones sobre las variables:
+
+$$
+X_1 = \text{porcentaje de reflectancia espectral en la longitud de onda de 560 nm (verde)} 
+$$
+$$
+X_2 = \text{porcentaje de reflectancia espectral en la longitud de onda de 720 nm (cercano al infrarrojo)} 
+$$
+
+para tres especies (sitka spruce [SS], Japanese larch [JL], y lodgepole pine [LP]) de plántulas de 1 año tomadas en tres momentos diferentes (día juliano 150 [1], día juliano 235 [2], y día juliano 320 [3]) durante la temporada de crecimiento. Las plántulas fueron cultivadas con el nivel óptimo de nutrientes.
+
+
+```{r, include=FALSE}
+data <- data.frame(
+  Reflectance_560nm = c(9.33, 8.74, 9.31, 8.27, 10.22, 10.13, 10.42, 10.62, 15.25, 16.22, 17.24, 12.77,
+                        12.07, 11.03, 12.48, 12.12, 15.38, 14.21, 9.69, 14.35, 38.71, 44.74, 36.67, 37.21,
+                        8.73, 7.94, 8.37, 7.86, 8.45, 6.79, 8.34, 7.54, 14.04, 13.51, 13.33, 12.77),
+  Reflectance_720nm = c(19.14, 19.55, 19.24, 16.37, 25.00, 25.32, 27.12, 26.28, 38.89, 36.67, 40.74, 67.50,
+                        33.03, 32.37, 31.31, 33.33, 40.00, 40.48, 33.90, 40.15, 77.14, 78.57, 71.43, 45.00,
+                        23.27, 20.87, 22.16, 21.78, 26.32, 22.73, 26.67, 24.87, 44.44, 37.93, 37.93, 60.87),
+  Species = factor(rep(c("SS", "JL", "LP"), each = 12)),
+  Time = factor(rep(1:3, each = 4, times = 3)),
+  Replication = factor(rep(1:4, times = 9))
+)
+
+n=36
+r=4
+t1=3
+t2=3
+```
+
+### a. 
+Realice una MANOVA de dos factores usando los datos de la Tabla 6.18. Pruebe el efecto de la especie, el efecto del tiempo y la interacción especie–tiempo. Use $\alpha = 0.05$.
+
+```{r}
+manova_result <- manova(cbind(Reflectance_560nm, Reflectance_720nm) ~ Species * Time, data = data)
+m=summary(manova_result, test = "Wilks")
+
+```
+
+La suma de cuadrados y productos cruzados para el factor 'Species':
+
+```{r}
+SSPF1=m$SS$Species
+kable(SSPF1)
+```
+
+La suma de cuadrados y productos cruzados para el factor 'Time':
+
+```{r}
+SSPF2=m$SS$Time
+kable(SSPF2)
+```
+
+La suma de cuadrados y productos cruzados para la interacción:
+
+```{r}
+SSPInt=m$SS$`Species:Time`
+kable(SSPInt)
+```
+
+La suma de cuadrados y productos cruzados de los errores:
+
+```{r}
+SSPE=m$SS$Residuals
+kable(SSPE)
+```
+
+Primero, para mirar si hay efecto de la interacción:
+
+```{r, echo=FALSE}
+lambda=det(SSPE)/det(SSPInt+SSPE)
+lambda
+```
+
+Por lo tanto, se tiene que: 
+
+```{r, echo=FALSE}
+kable(t(c(m[["stats"]][3,3], qf(.95,8,52))),
+      col.names = c("$F$ calculado", "$F_{8,52}(.05)$"))
+```
+
+Dado que el valor calculado es menor que el valor crítico, se rechaza $H_0$. Es decir, existe efecto de la interacción de los factores para la variable respuesta.
+
+Ahora procedemos a analizar el efecto factor por factor, aunque siendo cuidadosos pues, el hecho de que se recahzara la prueba para la interacción ya nos sugiere que el efecto de los factores sobre las variables no es aditivo.
+
+Calculando el $\mathbb{\Lambda}$ para el test del factor 1:
+
+$$
+\Lambda^* = \frac{|\text{SSP}_{\text{res}}|}{|\text{SSP}_{\text{fac1}} + \text{SSP}_{\text{res}}|}
+$$
+
+```{r,echo=FALSE}
+lambda=det(SSPE)/det(SSPF1+SSPE)
+
+lambda
+```
+
+Por lo tanto, se tiene que: 
+
+```{r, echo=FALSE}
+kable(t(c(m[["stats"]][1,3], qf(.95,4,52))),
+      col.names = c("$F$ calculado", "$F_{4,52}(.05)$"))
+```
+
+Dado que el valor calculado es menor que el valor crítico, se rechaza $H_0$ . Confirmamos que existe efecto de la especie sobre las variables respuestas, sin embargo no estamos en condiciones de concluir cómo es este efecto pues como se vio anteriormente no es aditivo y esto dificulta un poco la interpretación.
+
+Calculando el $\mathbb{\Lambda}$ para el test del factor 2:
+
+$$
+\Lambda^* = \frac{|\text{SSP}_{\text{res}}|}{|\text{SSP}_{\text{fac2}} + \text{SSP}_{\text{res}}|}
+$$
+
+```{r, echo=FALSE}
+lambda=det(SSPE)/det(SSPF2+SSPE)
+
+lambda
+```
+
+Por lo tanto, se tiene que: 
+
+```{r, echo=FALSE}
+kable(t(c(m[["stats"]][2,3], qf(.95,4,52))),
+      col.names = c("$F$ calculado", "$F_{4,52}(.05)$"))
+```
+
+Dado que el valor calculado es menor que el valor crítico, se rechaza $H_0$. Confirmamos que existe efecto del tiempo sobre las variables respuestas, sin embargo no estamos en condiciones de concluir cómo es este efecto pues como se vio anteriormente no es aditivo y esto dificulta un poco la interpretación. 
+
+
+### b.
+¿Cree que se cumplen los supuestos usuales de la MANOVA para estos datos? Discuta con referencia a un análisis de residuos y la posibilidad de observaciones correlacionadas a lo largo del tiempo.
+
+```{r, echo=FALSE}
+residuos=manova_result$residuals
+residuos=as.data.frame(residuos)
+par(mfrow=c(1,2))
+
+hist(residuos$Reflectance_560nm, 
+     #breaks = 14, # Ajusta el número de intervalos (puedes probar con más o menos)
+     xlab = colnames(residuos)[1], 
+     main = "Histograma de los residuos", 
+     col = "gray", # Agrega un color para mejorar el contraste
+     border = "black") # Define bordes para una visualización más clara
+
+# Histograma para Reflectance_720nm
+hist(residuos$Reflectance_720nm, 
+     #breaks = 14, # Ajusta el número de intervalos
+     xlab = colnames(residuos)[2], 
+     main = "Histograma de los residuos", 
+     col = "gray", 
+     border = "black")
+```
+
+Los residuos de ambas variables ("Reflectance_560nm" y "Reflectance_720nm") se ajustan relativamente bien en el sentido de que están centradas en cero, sin embargo existen diferencias en la dispersión. Mientras que los residuos de "Reflectance_560nm" están más concentrados y presentan una menor variación, los de "Reflectance_720nm" muestran mayor dispersión y valores extremos, lo que sugiere posibles problemas respecto al ajuste o una influencia externa que aumenta la variabilidad.
+
+### c. 
+Los forestales están particularmente interesados en la interacción entre especie y tiempo. ¿La interacción aparece en una variable pero no en la otra? Verifique ejecutando un ANOVA univariado de dos factores para cada una de las dos respuestas.
+```{r, include=FALSE}
+anova_560 <- aov(Reflectance_560nm ~ Species * Time, data = data)
+summary_560 <- summary(anova_560)
+
+anova_720 <- aov(Reflectance_720nm ~ Species * Time, data = data)
+summary_720 <- summary(anova_720)
+
+```
+
+Para la primera variable:
+
+```{r, echo=FALSE}
+summary_560
+
+```
+Primero, dado que se rechaza la hipotesis nula asociada a que la interacción podemos ver que existe efecto de la misma. Con las pruebas de los factores uno por una hay que ser cuidadosos, pues el hecho de no haber evidencia estadística suficiente en contra del supuesto del supuesto de no efecto de la interacción nos sugiere que los efectos de los factores no son aditivos.
+
+Para la segunda variable:
+
+```{r, echo=FALSE}
+summary_720
+
+```
+
+Primero, dado que no se rechaza la hipotesis nula asociada a que la interacción podemos ver que no existe efecto de la misma, por tanto tiene sentido revisar el test para cada factor ya que su efecto (si existe) es aditivo. Vemos que ambas se rechazan, es decir existe evidencia estadística suficiente en contra del supuesto de no efecto de la especie y el tiempo en la variable respuesta.
+
+
+### d. 
+¿Puede pensar en otro método para analizar estos datos (o un diseño experimental diferente) que permita una posible tendencia temporal en los números de reflectancia espectral?
+
+Dado que pareciese existir una correlación fuerte dada por el factor del tiempo sería interesante realizar un análisis teniendo que capture esa dependencia como lo sería realizar un MANOVA de medidas repetidas o una serie de tiempo
+
