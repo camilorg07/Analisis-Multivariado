@@ -1,0 +1,227 @@
+---
+title: "Taller_Clustering"
+author: "Juan Camacho"
+date: "2025-03-06"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(ggplot2)  # Para la visualización de los resultados del PCA
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+library(ggplot2)
+        library(knitr)
+        
+        # Simular datos (ya proporcionado)
+        set.seed(42)
+        data <- matrix(rnorm(60 * 50), ncol = 50)
+        classes <- rep(c("A", "B", "C"), each = 20)
+        dimnames(data) <- list(classes, paste0("v", 1:50))
+        data[classes == "B", 1:10] <- data[classes == "B", 1:10] + 1.2
+        data[classes == "C", 5:30] <- data[classes == "C", 5:30] + 1
+        
+        # Excluir 10 observaciones aleatoriamente
+        set.seed(123)
+        indices_excluir <- sample(1:nrow(data), 10)
+        data <- data[-indices_excluir, ]
+        classes <- classes[-indices_excluir]
+        
+        # b. PCA y gráfico de componentes principales
+        pca <- prcomp(data)
+        gg_pca <- ggplot(
+          data.frame(Class = classes, 
+                     PC1 = pca$x[, 1], 
+                     PC2 = pca$x[, 2]),
+          aes(x = PC1, y = PC2, color = Class)) +
+          geom_point(size = 3) +
+          theme_minimal()
+        print(gg_pca)
+        
+        # c. K-means con K=3
+        set.seed(123)
+        km3 <- kmeans(data, centers = 3)
+        cat("\nTabla de contingencia K=3:\n")
+        kable(table(Cluster = km3$cluster, Clase = classes))
+        
+        # d. K-means con K=2
+        set.seed(123)
+        km2 <- kmeans(data, centers = 2)
+        cat("\nTabla de contingencia K=2:\n")
+        kable(table(Cluster = km2$cluster, Clase = classes))
+        
+        # e. K-means con K=4
+        set.seed(123)
+        km4 <- kmeans(data, centers = 4)
+        cat("\nTabla de contingencia K=4:\n")
+        kable(table(Cluster = km4$cluster, Clase = classes))
+        
+        # f. K-means en componentes principales
+        set.seed(123)
+        km_pca <- kmeans(pca$x[, 1:2], centers = 3)
+        cat("\nK-means en componentes principales:\n")
+        kable(table(Cluster = km_pca$cluster, Clase = classes))
+        
+        # g. K-means con datos escalados
+        set.seed(123)
+        km_scale <- kmeans(scale(data), centers = 3)
+        cat("\nK-means con datos escalados:\n")
+        kable(table(Cluster = km_scale$cluster, Clase = classes))
+        
+        # Agrupamiento jerárquico con diferentes métricas
+        par(mfrow = c(2, 2))
+        
+        # Distancia basada en correlación
+        data.dist_cor <- as.dist(1 - cor(t(data)))
+        hc_cor <- hclust(data.dist_cor, method = "complete")
+        plot(hc_cor, labels = classes, main = "Correlación (Complete)")
+        
+        # Distancia euclidiana
+        data.dist_euc <- dist(data)
+        hc_euc <- hclust(data.dist_euc, method = "complete")
+        plot(hc_euc, labels = classes, main = "Euclidiana (Complete)")
+        
+        # Comparación con linkage methods
+        hc_avg <- hclust(data.dist_euc, method = "average")
+        plot(hc_avg, labels = classes, main = "Euclidiana (Average)")
+        
+        hc_single <- hclust(data.dist_euc, method = "single")
+        plot(hc_single, labels = classes, main = "Euclidiana (Single)")
+        
+        par(mfrow = c(1, 1))        
+```
+
+
+
+## Pregunta 10
+
+### K-means retirando 10 observaciones
+
+> En este problema, generarás datos simulados y luego realizarás PCA y  
+> agrupamiento \textit{K-means} en los datos.  
+>
+> a. Genera un conjunto de datos simulado con 20 observaciones en cada una de  
+>    tres clases (es decir, un total de 60 observaciones) y 50 variables.  
+
+```{r}
+set.seed(42)
+data <- matrix(rnorm(60 * 50), ncol = 50)
+classes <- rep(c("A", "B", "C"), each = 20)
+dimnames(data) <- list(classes, paste0("v", 1:50))
+data[classes == "B", 1:10] <- data[classes == "B", 1:10] + 1.2
+data[classes == "C", 5:30] <- data[classes == "C", 5:30] + 1
+
+# Excluir aleatoriamente 10 observaciones
+set.seed(123)  # Fijamos la semilla para reproducibilidad
+indices_excluir <- sample(1:nrow(data), 10)  # Seleccionamos 10 filas al azar
+data <- data[-indices_excluir, ]  # Eliminamos esas filas
+classes <- classes[-indices_excluir]  # También actualizamos las etiquetas de clase
+```
+
+> b. Realiza PCA en las 60 observaciones y grafica los vectores de puntuación  
+>    de los dos primeros componentes principales. Usa un color diferente para  
+>    indicar las observaciones en cada una de las tres clases. Si las tres  
+>    clases aparecen separadas en este gráfico, continúa con la parte (c).  
+>    Si no, regresa a la parte (a) y modifica la simulación para que haya una  
+>    mayor separación entre las tres clases. No continúes con la parte (c)  
+>    hasta que las tres clases muestren al menos cierta separación en los dos  
+>    primeros vectores de puntuación de los componentes principales.
+
+
+```{r}
+pca <- prcomp(data)
+ggplot(
+  data.frame(Class = classes, PC1 = pca$x[, 1], PC2 = pca$x[, 2]),
+  aes(x = PC1, y = PC2, col = Class)
+) +
+  geom_point()
+```
+
+> c. Realiza un agrupamiento \textit{K-means} de las observaciones con \( K = 3 \).  
+>    ¿Qué tan bien se comparan los clústeres obtenidos en el agrupamiento  
+>    \textit{K-means} con las etiquetas de clase verdaderas?
+
+```{r}
+km <- kmeans(data, 3)$cluster
+table(km, names(km))
+```
+
+
+> d. Realiza un agrupamiento \textit{K-means} con \( K = 2 \).  
+>    Describe tus resultados.
+
+```{r}
+km <- kmeans(data, 2)$cluster
+table(km, names(km))
+```
+
+> e. Ahora realiza un agrupamiento \textit{K-means} con \( K = 4 \)  
+>    y describe tus resultados.
+
+```{r}
+km <- kmeans(data, 4)$cluster
+table(km, names(km))
+```
+
+> f. Ahora realiza un agrupamiento \textit{K-means} con \( K = 3 \) en los  
+>    dos primeros vectores de puntuación de los componentes principales,  
+>    en lugar de en los datos originales. Es decir, realiza el agrupamiento  
+>    \textit{K-means} en la matriz \( 60 \times 2 \), donde la primera columna  
+>    es el primer vector de puntuación del componente principal y la segunda  
+>    columna es el segundo vector de puntuación del componente principal.  
+>    Comenta los resultados.
+
+```{r}
+km <- kmeans(pca$x[, 1:2], 3)$cluster
+table(km, names(km))
+```
+
+> g. Usando la función \texttt{scale()}, realiza un agrupamiento \textit{K-means}  
+>    con \( K = 3 \) en los datos \textit{después de escalar cada variable para  
+>    que tenga una desviación estándar de uno}.  
+>    ¿Cómo se comparan estos resultados con los obtenidos en (b)? Explica.
+
+```{r}
+km <- kmeans(scale(data), 3)$cluster
+table(km, names(km))
+```
+
+### Agrupamiento Jerarquico retirando 10 observaciones
+
+**Distinacia basada en correlación**
+```{r}
+# Calcular la distancia basada en correlación
+data.dist <- as.dist(1 - cor(t(data)))
+
+# Aplicar agrupamiento jerárquico con diferentes métodos de enlace
+hc.complete <- hclust(data.dist, method = "complete")
+hc.average <- hclust(data.dist, method = "average")
+hc.single <- hclust(data.dist, method = "single")
+
+# Graficar los dendrogramas
+plot(hc.complete, labels = classes, main = "Complete Linkage")
+plot(hc.average, labels = classes, main = "Average Linkage")
+plot(hc.single, labels = classes, main = "Single Linkage")
+
+```
+
+**Distancia euclideana**
+```{r}
+# Calcular la distancia euclidiana
+data.dist_euclidean <- dist(data)
+
+# Aplicar agrupamiento jerárquico con diferentes métodos de enlace
+hc.complete_euclidean <- hclust(data.dist_euclidean, method = "complete")
+hc.average_euclidean <- hclust(data.dist_euclidean, method = "average")
+hc.single_euclidean <- hclust(data.dist_euclidean, method = "single")
+
+# Graficar los dendrogramas
+
+plot(hc.complete_euclidean, labels = classes, main = "Complete Linkage (Euclidean)")
+plot(hc.average_euclidean, labels = classes, main = "Average Linkage (Euclidean)")
+plot(hc.single_euclidean, labels = classes, main = "Single Linkage (Euclidean)")
+
+```
+
