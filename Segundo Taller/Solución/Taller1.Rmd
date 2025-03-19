@@ -1,0 +1,3295 @@
+---
+title: "Taller 2 AM"
+output:
+  html_document:
+    toc: true         
+    toc_float: true   
+    toc_depth: 5 
+  pdf_document: default  
+editor_options: 
+  markdown: 
+    wrap: 72
+author: "Juan Andrés Camacho, Camilo Alejandro Raba  \nSebastian Orlando Olarte, Camilo
+  Esteban Gomez,\n
+  Fredy Urrea"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(warning = FALSE)
+knitr::opts_chunk$set(message = FALSE)
+```
+
+# 1. Parte de ACP
+
+## 8.1
+
+Determine the population principal components $Y_1$ and $Y_2$ for the
+covariance matrix:
+
+$$
+\Sigma = 
+\begin{bmatrix}
+5 & 2 \\
+2 & 2 
+\end{bmatrix}
+$$
+
+Also, calculate the proportion of the total population variance
+explained by the first principal component.
+
+```{r}
+sigma <- matrix(c(5,2,
+                  2,2), ncol = 2, byrow = T)
+```
+
+Se hallan los valores y vectores propios de la matriz de varianzas y
+covarianzas.
+
+```{r}
+sigma_eigen <- eigen(sigma)
+
+sigma_values <- sigma_eigen$values
+
+sigma_vectors <- sigma_eigen$vectors
+
+print(sigma_eigen$values)
+
+print(sigma_eigen$vectors)
+```
+
+Entonces las componentes principales poblacionales son
+
+$$
+Y_1=-0.894X_1-0.4472X_2 \\
+Y_2=0.4472X_1 - 0.8944X_2
+$$ Calculando la proporción de varianza explicada por la primera
+componente:
+
+```{r}
+sigma_values[1]/sum(sigma_values)
+```
+
+Vemos que un 86% de la varianza (aproximadamente) es explicada por el
+primer componente principal.
+
+## 8.2
+
+Convert the covariance matrix in Exercise 8.1 to a correlation matrix
+$\rho$.
+
+Vea que la matriz desviación estándar es:
+
+$$
+\mathbb{V^{\frac{1}{2}}}= \begin{bmatrix} \sqrt{5} & 0 \\ 0 & \sqrt{2}  \end{bmatrix}
+$$
+
+```{r include=FALSE}
+V <- matrix(c(sqrt(5), 0,
+              0, sqrt(2)), ncol = 2)
+```
+
+Luego,
+
+```{r}
+(Corr <- solve(V) %*% sigma %*% solve(V))
+
+```
+
+$$\mathbb{\rho} = \begin{pmatrix} 1 & 0.6324555 \\ 0.6324555 & 1 \end{pmatrix}$$
+
+### (a)
+
+Determine the principal components $Y_1$ and $Y_2$ from $\rho$ and
+compute the proportion of total population variance explained by $Y_1$.
+
+Determinando los valores y vectores propios de $\mathbb{\rho}$:
+
+```{r}
+Corr_eigen <- eigen(Corr)
+
+(Corr_values <- Corr_eigen$values)
+(Corr_vectors <- Corr_eigen$vectors)
+
+(var_exp <- Corr_values[1]/2)
+```
+
+Así,
+
+$$
+Y_1=-0.7071X_1-0.7071X_2 \\
+Y_2=0.7071X_1 - 0.7071X_2
+$$ Además, la proporción poblacional de varianza explicada por $Y_1$ es
+del 81.62% aproximadamente.
+
+### (b)
+
+Compare the components calculated in Part (a) with those obtained in
+Exercise 8.1.\
+Are they the same? Should they be?
+
+No son iguales pues cuando se usa la matriz de correlaciones, las
+variables contribuyen de igual forma a las componentes principales. En
+el primer caso no es así pues las varianzas son distintas.
+
+### (c)
+
+Compute the correlations $\rho_{Y_1,Z_1}$, $\rho_{Y_1,Z_2}$, and
+$\rho_{Y_2,Z_1}$.
+
+```{r}
+rho11 <- Corr_vectors[1,1]*sqrt(Corr_values[1])
+
+rho12 <- Corr_vectors[2,1]*sqrt(Corr_values[1])
+
+rho21 <- Corr_vectors[1,2]*sqrt(Corr_values[2])
+```
+
+Vea que
+
+$\rho_{Y_1,Z_1} = -0.9034532$, $\rho_{Y_1,Z_2} = -0.9034532$, and
+$\rho_{Y_2,Z_1} = 0.4286866$
+
+## 8.3
+
+Let
+
+$$
+\Sigma =
+\begin{bmatrix}
+2 & 0 & 0 \\
+0 & 4 & 0 \\
+0 & 0 & 4
+\end{bmatrix}
+$$
+
+Determine the principal components $Y_1, Y_2,$ and $Y_3$. What can you
+say about the eigenvectors (and principal components) associated with
+eigenvalues that are not distinct?
+
+```{r}
+Sigma <- matrix(c(2, 0, 0,
+                  0, 4, 0,
+                  0, 0, 4), 
+                nrow = 3, ncol = 3, byrow = TRUE)
+```
+
+Los valores propios son:
+
+```{r}
+eigen(Sigma)$values
+```
+
+Para $\lambda = 4$, la matriz queda:
+
+$$
+\Sigma - 4I =
+\begin{bmatrix}
+-2 & 0 & 0 \\
+0 & 0 & 0 \\
+0 & 0 & 0
+\end{bmatrix}
+$$
+
+Buscamos los vectores $v = (x, y, z)^T$ tal que:
+
+$$
+\begin{bmatrix}
+-2 & 0 & 0 \\
+0 & 0 & 0 \\
+0 & 0 & 0
+\end{bmatrix}
+\begin{bmatrix} x \\ y \\ z \end{bmatrix} =
+\begin{bmatrix} 0 \\ 0 \\ 0 \end{bmatrix}
+$$
+
+Esto nos da el sistema:
+
+```{=tex}
+\begin{align*}
+-2x &= 0 \Rightarrow x = 0 \\
+0y &= 0 \Rightarrow y \text{ libre} \\
+0z &= 0 \Rightarrow z \text{ libre}
+\end{align*}
+```
+Por lo tanto, los vectores propios asociados a $\lambda = 4$ son todos
+los vectores de la forma:
+
+$$
+v = c1 \begin{bmatrix} 0 \\ 1 \\ 0 \end{bmatrix} + c2 \begin{bmatrix} 0 \\ 0 \\ 1 \end{bmatrix}
+$$
+
+donde (c1,c2) son constantes arbitrarias.
+
+Así, los vectores propios de sigma son:
+
+```{r}
+eigen(Sigma)$vectors
+```
+
+Y los componentes principales serán de la forma
+
+$Y_1=X_1$, $Y_2=X_2$ y $Y_3=X_3$
+
+## 8.4
+
+Find the principal components and the proportion of the total population
+variance explained by each when the covariance matrix is
+
+$$
+\mathbf{\Sigma} = 
+\begin{bmatrix}
+\sigma^2 & \sigma^2\rho & 0 \\
+\sigma^2\rho & \sigma^2 & \sigma^2\rho \\
+0 & \sigma^2\rho & \sigma^2
+\end{bmatrix}, \quad -\frac{1}{\sqrt{2}} < \rho < \frac{1}{\sqrt{2}}
+$$
+
+Hallando los valores propios de $\Sigma$:
+
+$$
+\Sigma = \begin{bmatrix}
+\sigma^2 & \sigma^2\rho & 0 \\
+\sigma^2\rho & \sigma^2 & \sigma^2\rho \\
+0 & \sigma^2\rho & \sigma^2
+\end{bmatrix}
+$$
+
+El polinomio característico es:
+
+$$
+P(\Sigma) = -\lambda^3 + 3\sigma^2\lambda^2 - \left(\sigma^4 - \sigma^4\rho^2 + \sigma^4\rho^2\right)\lambda + \left(\sigma^6 - 2\sigma^6\rho^2\right) = 0
+$$
+
+Factorizando, tenemos:
+
+$$
+P(\Sigma) = -(\lambda - \sigma^2)(\lambda^2 - 2\sigma^2\lambda + \sigma^4 - 2\sigma^4\rho^2)
+$$
+
+Resolviendo para los valores propios:
+
+$$
+\lambda = \frac{2\sigma^2 \pm \sqrt{4\sigma^4 - 4(\sigma^4 - 2\sigma^4\rho^2)}}{2} = \sigma^2(1 \pm \rho\sqrt{2})
+$$
+
+Para $\lambda = \sigma^2$:
+
+Resolvemos $\Sigma - I\sigma^2$ para encontrar los vectores propios
+asociados:
+
+$$
+\begin{bmatrix}
+0 & \sigma^2\rho & 0 \\
+\sigma^2\rho & 0 & \sigma^2\rho \\
+0 & \sigma^2\rho & 0
+\end{bmatrix} \begin{bmatrix} x \\ y \\ z \end{bmatrix} = \begin{bmatrix} 0 \\ 0 \\ 0 \end{bmatrix}
+$$
+
+Con la solución $\vec{v}_1 = \begin{bmatrix} 1 \\ 0 \\ -1 \end{bmatrix}$
+(normalizado).
+
+Para $\lambda = \sigma^2(1 + \rho\sqrt{2})$:
+
+Resolvemos $\Sigma - I\lambda$:
+
+$$
+\begin{bmatrix}
+-\sigma^2\rho\sqrt{2} & \sigma^2\rho & 0 \\
+\sigma^2\rho & -\sigma^2\rho\sqrt{2} & \sigma^2\rho \\
+0 & \sigma^2\rho & -\sigma^2\rho\sqrt{2}
+\end{bmatrix} \begin{bmatrix} x \\ y \\ z \end{bmatrix} = \begin{bmatrix} 0 \\ 0 \\ 0 \end{bmatrix}
+$$
+
+Con solución
+$\vec{v}_2 = \begin{bmatrix} \frac{1}{\sqrt{2}} \\ \frac{1}{\sqrt{2}} \\ 0 \end{bmatrix}$
+(normalizado).
+
+Para $\lambda = \sigma^2(1 - \rho\sqrt{2})$:
+
+Resolvemos $\Sigma - I\lambda$:
+
+$$
+\begin{bmatrix}
+\sigma^2\rho\sqrt{2} & \sigma^2\rho & 0 \\
+\sigma^2\rho & \sigma^2\rho\sqrt{2} & \sigma^2\rho \\
+0 & \sigma^2\rho & \sigma^2\rho\sqrt{2}
+\end{bmatrix} \begin{bmatrix} x \\ y \\ z \end{bmatrix} = \begin{bmatrix} 0 \\ 0 \\ 0 \end{bmatrix}
+$$
+
+Con solución
+$\vec{v}_3 = \begin{bmatrix} \frac{1}{\sqrt{2}} \\ -\frac{1}{\sqrt{2}} \\ 0 \end{bmatrix}$
+(normalizado).
+
+Componentes principales poblacionales:
+
+$$
+Z_1 = \frac{1}{\sqrt{2}}X_1 + \frac{1}{\sqrt{2}}X_3
+$$
+
+$$
+Z_2 = \frac{1}{2}X_1 + \frac{\sqrt{2}}{2}X_2 + \frac{1}{2}X_3
+$$
+
+$$
+Z_3 = \frac{1}{2}X_1 - \frac{\sqrt{2}}{2}X_2 + \frac{1}{2}X_3
+$$
+
+Proporción de varianza explicada
+
+Para $Z_1$:
+
+$$
+\frac{\sigma^2}{\sigma^2 + 2\sigma^2} = \frac{1}{3} \approx 0.33
+$$
+
+Para $Z_2$ y $Z_3$:
+
+$$
+0 < \frac{1 \pm \rho\sqrt{2}}{3} < \frac{2}{3} \approx 0.66
+$$ \
+## 8.5
+
+### (a)
+
+Find the eigenvalues of the correlation matrix
+
+$$
+    \boldsymbol{\rho} =
+    \begin{bmatrix}
+    1 & \rho & \rho \\
+    \rho & 1 & \rho \\
+    \rho & \rho & 1
+    \end{bmatrix}
+$$
+
+Are your results consistent with (8-16) and (8-17)?
+
+Se tiene que:
+
+$$
+\det(\boldsymbol{\rho} - \lambda I) = 
+\begin{vmatrix}
+1 - \lambda & \rho & \rho \\
+\rho & 1 - \lambda & \rho \\
+\rho & \rho & 1 - \lambda
+\end{vmatrix}
+$$ $$
+\begin{aligned}
+\begin{vmatrix}
+1 - \lambda & \rho & \rho \\
+\rho & 1 - \lambda & \rho \\
+\rho & \rho & 1 - \lambda
+\end{vmatrix} 
+&= (1-\lambda)^3 + 2\rho^2 - 3\rho^2(1-\lambda) \\
+&= -\lambda^3 + 3\lambda^2 + 3\lambda(\rho^2-1) + (2\rho+1)(\rho-1)^2
+\end{aligned}
+$$ Factorizando por $\lambda-(2p+1)$ tenemos que:
+
+$(\lambda-(1-p))^2(\lambda-(2p+1))=0$
+
+Por tanto los valores propios son:
+
+$\lambda_1 = 2p+1, \lambda_2=\lambda_3=1-p$
+
+De esto tenemos que este es resultado con (8-16) para $p=3$.
+
+### (b)
+
+Verify the eigenvalue–eigenvector pairs for the $p \times p$ matrix
+$\boldsymbol{\rho}$ given in (8-15).
+
+Al hacer $$
+\boldsymbol{\rho} \left( \frac{1}{\sqrt{p}} \mathbf{1} \right)
+$$ se tiene que:
+
+$$\begin{bmatrix}
+    1 & \rho & \rho \\
+    \rho & 1 & \rho \\
+    \rho & \rho & 1
+    \end{bmatrix} \left( \frac{1}{\sqrt{p}} \mathbf{1} \right) = \left(\left(1+2p\right)\frac{1}{\sqrt{p}}\mathbf{1} \right)  
+    $$
+
+Así $\left(\frac{1}{\sqrt{p}}\mathbf{1} \right)$ es el vector propio
+asociado al valor propio $1+2p$ como en (8-15) para $p=3$.
+
+Adicionalmente los restantes vectores propios son de la forma: $$
+\boldsymbol{\rho} e_i = (1 - \rho) e_i, \quad i = 2,3,\dots, p
+$$
+
+Esto significa que existen $3 - 1$ autovectores ortogonales al vector de
+unos, y que todos comparten el mismo autovalor $1 - \rho$.
+
+## 8.6
+
+Data on $x_1 = \text{sales}$ and $x_2 = \text{profits}$ for the 10
+largest companies in the world were listed in Exercise 1.4 of Chapter
+1.\
+From Example 4.12:
+
+$$
+\bar{\mathbf{x}} = 
+\begin{bmatrix}
+155.60 \\
+14.70
+\end{bmatrix}, \quad
+\mathbf{S} = 
+\begin{bmatrix}
+7476.45 & 303.62 \\
+303.62 & 26.19
+\end{bmatrix}
+$$
+
+### (a)
+
+Determine the sample principal components and their variances for these
+data.\
+(You may need the quadratic formula to solve for the eigenvalues of
+$\mathbf{S}$).
+
+```{r include=FALSE}
+
+S <- matrix(c(7476.45, 303.62,
+              303.62, 26.19), ncol = 2, byrow = T)
+
+xbarra <- c(155.60, 14.70)
+
+```
+
+Primero hallamos lo valores y vectores propios estimados:
+
+```{r}
+Seigen <- eigen(S)
+
+(S_values <- Seigen$values)
+
+(S_vectors <- cbind(Seigen$vectors[1:2, 1]*(-1), Seigen$vectors[1:2, 2]))
+```
+
+Encontrando que
+
+$$
+\hat{\lambda}_1 = 7488.80293, \quad \hat{\mathbf{e}}_1 =
+\begin{bmatrix} 
+0.99917337 \\ 0.04065185  
+\end{bmatrix}
+$$
+
+$$
+\hat{\lambda}_2 = 13.83707, \quad \hat{\mathbf{e}}_2 =
+\begin{bmatrix} 
+0.04065185 \\ -0.99917337  
+\end{bmatrix}
+$$ Luego, los componentes principales muestrales son:
+
+$$
+\hat{y}_1 = 0.99917x_1+0.0407x_2 \\
+\hat{y}_2 = 0.04065x_1-0.9991x_2
+$$ Como para cada $\hat{\mathbf{Z}}_i$ su varianza
+$\operatorname{Var}\left(\hat{\mathbf{Z}}_i\right)=\lambda_i$, entonces
+
+|    Componente     |   $y_1$    |  $y_2$   |
+|:-----------------:|:----------:|:--------:|
+| Varianza muestral | 7488.80293 | 13.83707 |
+
+### (b)
+
+Find the proportion of the total sample variance explained by
+$\hat{y}_1$.
+
+Para esto,
+
+```{r}
+(hat_var_y_1 <- S_values[1]/sum(S_values))
+
+```
+
+Y entonces el porcentaje de varianza explicado por $\hat{y}_1$ es del
+99.8% aproximadamente.
+
+### (c)
+
+Sketch the constant density ellipse:
+
+$$
+(\mathbf{x} - \bar{\mathbf{x}})'\mathbf{S}^{-1}(\mathbf{x} - \bar{\mathbf{x}}) = 1.4
+$$
+
+Indicate the principal components $\hat{y}_1$ and $\hat{y}_2$ on your
+graph.
+
+```{r}
+
+library(ellipse)
+library(car)
+
+V<-diag(sqrt(diag(S)))
+
+R<-solve(V)%*%S%*%solve(V)
+
+
+#png("86c.png", width = 600, height = 800, res = 150)
+c<-1.4
+
+plot(S, type='n', ylim=c(5,25),xlim=c(50,270),xlab = "Sales (x1)", ylab = "Profits (x2)")
+car::ellipse(center =xbarra, shape = S, radius = sqrt(c), draw = TRUE)
+arrows(155.60, 14.7, 
+       155.60 + sqrt(c*S_values[1]) * S_vectors[1,1], 
+       14.7 + sqrt(c*S_values[1])* S_vectors[2,1], 
+       col = "red", lwd = 2, length = 0.1)
+
+arrows(155.60, 14.7, 
+       155.60 + sqrt(c*S_values[2])* S_vectors[1,2], 
+       14.7 + sqrt(c*S_values[2]) * S_vectors[2,2], 
+       col = "darkblue", lwd = 2, length = 0.1)
+text(x = xbarra[1] + sqrt(c * S_values[1]) * S_vectors[1,1],
+     y = xbarra[2] + sqrt(c * S_values[1]) * S_vectors[2,1],
+     labels = expression(hat(y)[1]),
+     col = "red", pos = 4, cex = 0.9)
+text(x = xbarra[1] + sqrt(c * S_values[2]) * S_vectors[1,2],
+     y = xbarra[2] + sqrt(c * S_values[2]) * S_vectors[2,2]-1.8,
+     labels = expression(hat(y)[2]),
+     col = "darkblue", pos = 3, cex = 0.9)
+
+#dev.off()
+```
+
+### (d)
+
+Compute the correlation coefficients $r_{\hat{y}_1,x_k}, k = 1, 2$.\
+What interpretation, if any, can you give to the first principal
+component?
+
+Teniendo en cuenta que
+
+$$
+r_{\hat{y}_1, x_k} = \frac{\hat{e}_{1k} \sqrt{\hat{\lambda}_1}}{\sqrt{s_{kk}}}, \quad k = 1, 2
+$$
+
+```{r include=FALSE}
+r_y1_1 <- S_vectors[1,1]*sqrt(S_values[1])/sqrt(S[1,1])
+
+
+r_y1_2 <- S_vectors[1,2]*sqrt(S_values[1])/sqrt(S[2,2])
+
+```
+
+$$r_{\hat{y}_1, x_1} = 0.9999985 \\ r_{\hat{y}_1, x_2} = 0.6874146$$
+
+Se ve que $r_{\hat{y}_1,x_1}$ es practicamente 1 y $r_{\hat{y}_1,x_2}$
+es aproximadamente 0.69. Esto signifacaría que la importancia de la
+variable 1 ($x_1=\text{sales}$) sobre la componente proncipal $z_1$ es
+mayor que la de la variable 2 ($x_2=$profits), pues esta la determina
+practicamente en su totalidad.
+
+## 8.7
+
+Convert the covariance matrix **S** in Exercise 8.6 to a sample
+correlation matrix **R**.
+
+La matriz desviación estándar:
+
+```{r include=FALSE}
+
+V <- matrix(c(sqrt(S[1,1]), 0,
+              0, sqrt(S[2,2])), ncol = 2, byrow = T)
+
+```
+
+$$
+\mathbb{V^{\frac{1}{2}}}= \begin{bmatrix} 86.46647 & 0 \\ 0 & 5.117617  \end{bmatrix}
+$$ Así,
+
+```{r}
+(R <- solve(V) %*% S %*% solve(V))
+
+```
+
+$$\mathbf{R} = \begin{pmatrix} 1 & 0.6861434 \\ 0.6861434 & 1 \end{pmatrix}$$
+
+\###(a) Find the sample principal components $\hat{y}_1, \hat{y}_2$ and
+their variances.
+
+Primero hallamos los valores y vectores propios de $\mathbf{R}$
+
+```{r}
+R_values <- (eigen(R))$values
+
+R_vectors <- (eigen(R))$vectors
+```
+
+\$\$ \hat{\lambda}\_1 = 1.6861434 \quad \quad \quad
+\\hat{\\textbf{e}\_1} =
+
+```{=tex}
+\begin{pmatrix}0.7071068  \\ 0.7071068   \end{pmatrix}
+```
+\\
+
+\hat{\lambda}\_2 = 0.3138566 \quad \quad \quad \\hat{\\textbf{e}\_2} =
+
+```{=tex}
+\begin{pmatrix}-0.7071068  \\ 0.7071068   \end{pmatrix}
+```
+\\ \$\$ Así, se tiene que
+
+$$
+\hat{y}_1 = 0.7071068z_1+0.7071068z_2 \\
+\hat{y}_2 = -0.7071068z_1+0.7071068z_2
+$$
+
+Y sus respectivas varianzas muestrales
+
+|    Componente     |   $y_1$   |   $y_2$   |
+|:-----------------:|:---------:|:---------:|
+| Varianza muestral | 1.6861434 | 0.3138566 |
+
+### (b)
+
+Compute the proportion of the total sample variance explained by
+$\hat{y}_1$.
+
+```{r}
+hat_var_y_1 <- R_values[1]/sum(R_values)
+
+```
+
+La proporción de varianza explicada por el componente $y_1$ es del 84%
+aproximadamente.
+
+3.  **(c)** Compute the correlation coefficients
+    $r_{\hat{y}_i, x_k}, k = 1, 2$. Interpret $\hat{y}_1$.
+
+```{r include=FALSE}
+r_y1_1 <- R_vectors[1,1]*sqrt(R_values[1])/sqrt(R[1,1])
+
+
+r_y1_2 <- R_vectors[1,2]*sqrt(R_values[1])/sqrt(R[2,2])
+
+```
+
+Vea que los coeficientes (en valor absoluto) son iguales. Esto nos
+quiere decir que ambas variables contribuyen de igual forma al primer
+componente principal.
+
+$$r_{\hat{y}_1, z_1} = 0.9181894 \\ r_{\hat{y}_1, z_2} = 0.9181894$$
+
+### (d)
+
+Compare the components obtained in Part **(a)** with those obtained in
+Exercise 8.6(a). Given the original data displayed in Exercise 1.4, do
+you feel that it is better to determine principal components from the
+sample covariance matrix or sample correlation matrix? Explain.
+
+En la primera comoponente principal muestral nos damos cuenta de que la
+primera variable tiene un peso mucho mayor que la segunda. En el caso en
+el que usamos la matriz de correlaciones esto no fue así, pues al
+estandarizar las variables estamos trabando con las mismas unidades. Por
+consecuente, ambas variables contribuyen de igual forma a la componente.
+Por lo tanto, se piensa que es mejor usando $\mathbf{R}$.
+
+## 8.8
+
+Use the results in Example 8.5.
+
+$$
+\bar{\mathbf{x}}' = [0.0011, 0.0007, 0.0016, 0.0040, 0.0040]
+$$
+
+$$
+\mathbf{R} = 
+\begin{bmatrix}
+1.000 & 0.632 & 0.511 & 0.115 & 0.155 \\
+0.632 & 1.000 & 0.574 & 0.322 & 0.213 \\
+0.511 & 0.574 & 1.000 & 0.183 & 0.146 \\
+0.115 & 0.322 & 0.183 & 1.000 & 0.683 \\
+0.155 & 0.213 & 0.146 & 0.683 & 1.000
+\end{bmatrix}
+$$
+
+$$
+\hat{\lambda}_1 = 2.437, \quad \hat{e}_1' = [0.469, 0.532, 0.465, 0.387, 0.361]
+$$
+
+$$
+\hat{\lambda}_2 = 1.407, \quad \hat{e}_2' = [-0.368, -0.236, -0.315, 0.585, 0.606]
+$$
+
+$$
+\hat{\lambda}_3 = 0.501, \quad \hat{e}_3' = [-0.604, -0.136, 0.772, 0.093, -0.109]
+$$
+
+$$
+\hat{\lambda}_4 = 0.400, \quad \hat{e}_4' = [0.363, -0.629, 0.289, -0.381, 0.493]
+$$
+
+$$
+\hat{\lambda}_5 = 0.255, \quad \hat{e}_5' = [0.384, -0.496, 0.071, 0.595, -0.498]
+$$
+
+### (a)
+
+Compute the correlations $r_{y_i, z_k}$ for $i = 1, 2$ and
+$k = 1, 2, \ldots, 5$. Do these correlations reinforce the
+interpretations given to the first two components? Explain.
+
+```{r include=FALSE}
+
+lambdas <- c(2.437, 1.407, 0.501, 0.400, 0.255)
+
+eigenvectors <- matrix(c(0.469, 0.532, 0.465, 0.387, 0.361,
+                         -0.368, -0.236, -0.315, 0.585, 0.606,
+                         -0.604, -0.136, 0.772, 0.093, -0.109,
+                         0.363, -0.629, 0.289, -0.381, 0.493,
+                         0.384, -0.496, 0.071, 0.595, -0.498),
+                       byrow = FALSE, nrow = 5)
+
+```
+
+Usando
+
+$$
+r_{\hat{y}_i, z_k} = \hat{e}_{ik} \sqrt{\hat{\lambda}_i}, \quad i = 1,2, k = 1, 2, 3, 4, 5
+$$
+
+```{r}
+
+r <- matrix(NA, ncol = 5, nrow = 2)  
+
+for (i in c(1, 2)) {
+  for (k in 1:5) {
+    r[i, k] <- eigenvectors[k, i] * sqrt(lambdas[i]) 
+  }
+}
+
+r <- as.data.frame.matrix(r)
+
+colnames(r) <- paste0("k=",1:5)
+rownames(r) <- paste0("i=",1:2)
+
+r
+
+```
+
+Vea que estos resultados apoyan las interpretaciones dadas en el ejemplo
+mencionado pues las correlaciones entre la primera componente principal
+y cada una de las variables es positiva, reflejando la actividad general
+del mercado. Por otro lado, entre la segunda componente principal y las
+variables se puede ver un contraste entre los precios de las acciones de
+los bancos y las acciones petroleras mostrando que las acciones de un
+mismo sector tienden a moverse juntas.
+
+### (b)
+
+Test the hypothesis
+
+$$
+H_0: \mathbf{\rho} = \mathbf{\rho_0} = 
+\begin{bmatrix}
+1 & \rho & \rho & \rho & \rho \\
+\rho & 1 & \rho & \rho & \rho \\
+\rho & \rho & 1 & \rho & \rho \\
+\rho & \rho & \rho & 1 & \rho \\
+\rho & \rho & \rho & \rho & 1 
+\end{bmatrix}
+$$
+
+versus
+
+$$
+H_1: \mathbf{\rho} \neq \mathbf{\rho_0}
+$$
+
+at the 5% level of significance. List any assumptions required in
+carrying out this test.
+
+```{r echo=FALSE}
+
+R <- matrix(c(
+  1.000, 0.632, 0.511, 0.115, 0.155,
+  0.632, 1.000, 0.574, 0.322, 0.213,
+  0.511, 0.574, 1.000, 0.183, 0.146,
+  0.115, 0.322, 0.183, 1.000, 0.683,
+  0.155, 0.213, 0.146, 0.683, 1.000
+), nrow = 5, ncol = 5, byrow = TRUE)
+
+p <- ncol(R)
+
+n <- 103
+
+alpha <- 0.05
+
+r_barras <- NULL
+off_diag <- NULL
+
+for (i in 1:5) {
+      r_barras[i] <- sum(R[-i,i])/(nrow(R)-1)
+      
+      off_diag <- cbind(off_diag, R[-i,i])
+}
+
+r_barra <- mean(off_diag)
+
+
+dif_off_diag <- sum((R[upper.tri(R)]-r_barra)^2)
+
+dif_mean <- sum((r_barras - r_barra)^2)
+
+hat_gamma <- ((p-1)^2*(1-(1-r_barra)^2))/(p-(p-2)*(1-r_barra)^2)
+
+
+T <- (n-1)/(1-r_barra)^2*(dif_off_diag - hat_gamma*dif_mean)
+
+perc <- qchisq(1-alpha, (p+1)*(p-2)/2)
+
+
+```
+
+| $\bar{r}_1$ | $\bar{r}_2$ | $\bar{r}_3$ | $\bar{r}_4$ | $\bar{r}_5$ |
+|-------------|-------------|-------------|-------------|-------------|
+| 0.3534      | 0.43525     | 0.35350     | 0.32575     | 0.29925     |
+
+\$\$\overline{r}=0.3534\\
+
+\sum{\sum}*{i\<k} (r*{ik}-\overline{r})\^2 = 0.4487024 \\
+
+\sum\_{k=1}\^5 (\overline{r}\_k - \overline{r})\^2 = 0.0103962 \\
+
+T = 103.1636 \> 16.91898 = \chi\^2_9 (0.05) \$\$
+
+Luego, con una significancia del 5% se rechaza la hipótesis nula de
+equicorrelación entre las variables.
+
+Este test se realiza asumiendo que el tamaño de la muestra es grande y
+que los datos vienen de una distribución normal multivariada.
+
+## 8.9.
+
+(A test that all variables are independent)
+
+### (a)
+
+Consider that the normal theory likelihood ratio test of $H_0: \Sigma$
+is the diagonal matrix $$
+\begin{bmatrix}
+\sigma_{11} & 0 & \cdots & 0 \\
+0 & \sigma_{22} & \ddots & \vdots \\
+\vdots & \ddots & \ddots & 0 \\
+0 & \cdots & 0 & \sigma_{pp}
+\end{bmatrix}, \quad \sigma_{ii} > 0
+$$ Show that the test is as follows: Reject $H_0$ if $$
+\Lambda = \frac{|S|^{n/2}}{\prod_{i=1}^p s_{ii}^{n/2}} = |R|^{n/2} < c.
+$$
+
+For a large sample size, $-2 \ln \Lambda$ is approximately
+$\chi^2_{p(p-1)/2}$. Bartlett [3] suggests that the test statistic
+$-2[1 - (2p + 11)/6n] \ln \Lambda$ be used in place of $-2 \ln \Lambda$.
+This results in an improved chi-square approximation. The large sample
+$\alpha$ critical point is $\chi^2_{p(p-1)/2}(\alpha)$. Note that
+testing $\Sigma = \Sigma_0$ is the same as testing $\rho = I$.
+
+(b) Show that the likelihood ratio test of $H_0: \Sigma = \sigma^2 I$
+    rejects $H_0$ if $$
+    \Lambda = \frac{|S|^{n/2}}{\left( \text{tr}(S)/p \right)^{np/2}} = \left[ \frac{\text{geometric mean } \hat{\lambda}_i}{\text{arithmetic mean } \hat{\lambda}_i} \right]^{np/2} < c.
+    $$
+
+For a large sample size, Bartlett [3] suggests that $$
+-2[1 - (2p^2 + p + 2)/6pn] \ln \Lambda
+$$ is approximately $\chi^2_{p(p+2)(p-1)/2}$. Thus, the large sample
+$\alpha$ critical point is $\chi^2_{p(p+2)(p-1)/2}(\alpha)$. This test
+is called a sphericity test, because the constant density contours are
+spheres when $\Sigma = \sigma^2 I$.
+
+Con lo proporcionado se tiene que
+
+$$
+\max_{\mu, \Sigma} L(\mu, \Sigma) = \frac{e^{-np/2}}{(2\pi)^{np/2} |\hat{\Sigma}|^{n/2}}
+$$ $$
+= \frac{e^{-np/2}}{(2\pi)^{np/2} n^{-np/2} \prod_{i=1}^p |\sum_{i=1}^n (\mathbf{x}_i-\overline{\mathbf{x}})(\mathbf{x}_i-\overline{\mathbf{x}})^t|}
+$$
+
+$$
+= \frac{e^{-np/2}}{(2\pi)^{np/2} n^{-np/2} \prod_{i=1}^p |(n-1)\mathbf{S}|}
+$$
+
+Por otro lado,
+
+$$
+\max_{\mu, \Sigma_0} L(\mu, \Sigma_0) = \prod_{i=1}^p \frac{e^{-n/2}}{(2\pi)^{n/2} n^{-n/2} (\sum_{j=1}^n(x_{ij}-\overline{x}_i)^2)^{n/2}}
+$$
+
+$$
+= \frac{e^{-np/2}}{(2\pi)^{np/2} n^{-np/2} \prod_{i=1}^p ((n-1)s_{ii})^{n/2}}
+$$
+
+Entonces, $$
+\Lambda = \frac{\max_{\mu, \Sigma_0} L(\mu, \Sigma_0)}{\max_{\mu, \Sigma} L(\mu, \Sigma)}
+$$
+
+$$
+=\frac{(n-1)^{np/2} |\mathbf{S}|^{n/2}} {(n-1)^{
+np/2} {\prod_{i=1}^p s_{ii}^{n/2}}
+}
+$$
+
+$$
+= \frac{|\mathbf{S}|^{n/2}}{\prod_{i=1}^p s_{ii}^{n/2}} = |\mathbf{R}|^{n/2} < c.
+$$
+
+### (b)
+
+Cuando $\Sigma = \sigma^2 I$, usando (4-16) y (4-17), obtenemos:
+
+$$
+\max_{\mu} L(\mu, \sigma^2 I) = \frac{1}{(2\pi)^{\frac{np}{2}} (\sigma^2)^{\frac{np}{2}}} 
+\exp\left(-\frac{1}{2\sigma^2} \operatorname{tr}[(n-1)S] \right)
+$$
+
+Así,
+
+$$
+\max_{\mu, \sigma^2} L(\mu, \sigma^2 I) = 
+\frac{(np)^{np/2} e^{-np/2}}{(2\pi)^{np/2} (n-1)^{np/2} [\operatorname{tr}(S)]^{np/2}}
+$$
+
+$$
+= \frac{e^{-np/2}}{(2\pi)^{np/2} (n-1)^{np/2} \left(\frac{1}{p} \operatorname{tr}(S)\right)^{np/2}}
+$$
+
+Bajo $H_0$, hay $p$ medias $\mu_i$ y una varianza, por lo que la
+dimensión del espacio de parámetros es:
+
+$$
+Y_0 = p + 1
+$$
+
+El caso no restringido tiene dimensión:
+
+$$
+p + \frac{p(p+1)}{2}
+$$
+
+Así, la estadística $\chi^2$ tiene:
+
+$$
+\frac{p(p+1)}{2} - 1 = \frac{(p+2)(p-1)}{2}
+$$
+
+grados de libertad.
+
+## 8.10
+
+The weekly rates of return for five stocks listed on the New York Stock
+Exchange are given in Table 8.4. (See the stock-price data on the
+following website: \texttt{www.prenhall.com/statistics}.)
+
+### (a)
+
+Construct the sample covariance matrix $S$, and find the sample
+principal components in (8-20). (Note that the sample mean vector
+$\bar{x}$ is displayed in Example 8.5.)
+
+```{r}
+varianzas <- c(0.00043327, 0.00043872, 0.00022398, 0.00072251, 0.00076568)
+
+sigma <- sqrt(varianzas)
+
+R <- matrix(c(1.000, 0.632, 0.511, 0.115, 0.155,
+              0.632, 1.000, 0.574, 0.322, 0.213,
+              0.511, 0.574, 1.000, 0.183, 0.146,
+              0.115, 0.322, 0.183, 1.000, 0.683,
+              0.155, 0.213, 0.146, 0.683, 1.000), 
+            nrow = 5, byrow = TRUE)
+D <- diag(sigma)
+
+# Calcular la matriz de covarianzas S
+S <- D %*% R %*% D
+
+```
+
+```{r, echo=FALSE}
+colnames(S)<-colnames(c("JP_Morgan","Citibank", "Wells_Fargo","Royal_Dutch_Shell","Exxon_Mobil"))
+
+rownames(S)=colnames(S)
+
+knitr::kable(round(S,8))
+
+```
+
+Para hallar los componentes principales:
+
+```{r}
+knitr::kable(data.frame(Variable=c("JP_Morgan","Citibank", "Wells_Fargo","Royal_Dutch_Shell","Exxon_Mobil"),round(eigen(S)$vectors,3)), col.names = c("Variable","CP1","CP2","CP3","CP4","CP5"))
+```
+
+### (b)
+
+Determine the proportion of the total sample variance explained by the
+first three principal components. Interpret these components.
+
+De **(a)** tenemos que:
+
+```{r, echo=FALSE}
+knitr::kable(t(round(eigen(S)$values[c(1:3)],5)),col.names=c("$$\\lambda_1$$","$$\\lambda_2$$","$$\\lambda_3$$"))
+```
+
+Y la varianza total está dada por
+
+```{r, echo=FALSE}
+round(sum(eigen(S)$values),5)
+```
+
+Por tanto, el porcentaje de varianza explicado por los tres primeros
+componentes principales es de:
+
+```{r, echo=FALSE}
+paste(round(100*sum(eigen(S)$values[1:3])/sum(eigen(S)$values),1), "%")
+```
+
+### (c)
+
+Construct Bonferroni simultaneous 90% confidence intervals for the
+variances $\lambda_1, \lambda_2,$ and $\lambda_3$ of the first three
+population components $Y_1, Y_2,$ and $Y_3$.
+
+Realizando los calculos
+
+```{r}
+n<-103
+alpha<-.1
+p<-3
+
+a<-matrix(NA, nrow = p, ncol = 3)
+Eigenvalue = paste0("$$\\lambda_", 1:p, "$$")
+
+
+for (i in 1:p){
+  a[i,1]<-Eigenvalue[i]
+  a[i,2]<-round(eigen(S)$values[i]/(1+qt(1-alpha/p, n-1)*sqrt(2/n)),4)
+  a[i,3]<-round(eigen(S)$values[i]/(1-qt(1-alpha/p, n-1)*sqrt(2/n)),4)
+}
+
+knitr::kable(a, col.names = c("Lambda", "LI","LS"))
+```
+
+### (d)
+
+Given the results in Parts (a)-(c), do you feel that the stock
+rates-of-return data can be summarized in fewer than five dimensions?
+Explain.
+
+Sí se pueden resumir, dado que:
+
+-   Los tres primeros componentes principales explican el 89.9% de la
+    varianza total.\
+-   En datos financieros, generalmente dos componentes resumen
+    tendencias del mercado e industria.\
+-   Los últimos dos componentes tienen valores propios pequeños,
+    aportando poca información adicional.\
+-   Esto sugiere que se pueden reducir las dimensiones a dos o tres sin
+    perder información importante.\
+-   Reducir las dimensiones mejora la interpretación sin afectar el
+    análisis de los datos.\
+    \
+
+## 8.12 
+Consider the air-pollution data listed in Table 1.5. Your job is to summarize these data in fewer than \( p = 7 \) dimensions if possible. Conduct a principal component analysis of the data using both the covariance matrix **S** and the correlation matrix **R**. What have you learned? Does it make any difference which matrix is chosen for analysis? Can the data be summarized in three or fewer dimensions? Can you interpret the principal components?
+
+
+
+*Usando $\mathbf{S}$*
+
+
+```{r echo=FALSE}
+
+X <- data.frame(
+  Wind = c(8, 7, 7, 10, 6, 8, 9, 5, 7, 8, 6, 6, 7, 10, 10, 9, 8, 8, 9, 9, 10, 9, 8, 5, 6, 8, 6, 8, 6, 10, 8, 7, 5, 6, 10, 8, 5, 5, 7, 7, 6, 8),
+  Solar_radiation = c(98, 107, 103, 88, 91, 90, 84, 72, 82, 64, 71, 91, 72, 70, 72, 77, 76, 71, 67, 69, 62, 88, 80, 30, 83, 84, 78, 79, 62, 37, 71, 52, 48, 75, 35, 85, 86, 86, 79, 79, 68, 40),
+  CO = c(7, 4, 4, 5, 4, 5, 7, 6, 5, 5, 5, 4, 7, 4, 4, 4, 4, 5, 4, 3, 5, 4, 4, 3, 5, 3, 4, 2, 4, 3, 4, 4, 6, 4, 4, 4, 3, 7, 7, 5, 6, 4),
+  NO = c(2, 3, 3, 2, 2, 2, 4, 4, 1, 2, 4, 2, 4, 2, 1, 1, 1, 3, 2, 3, 3, 2, 2, 3, 1, 2, 2, 1, 3, 1, 1, 1, 5, 1, 1, 1, 1, 2, 4, 2, 2, 3),
+  NO2 = c(12, 9, 5, 8, 8, 12, 12, 21, 11, 13, 10, 12, 18, 11, 8, 9, 7, 16, 13, 9, 14, 7, 13, 5, 10, 7, 11, 7, 9, 7, 10, 12, 8, 10, 6, 9, 6, 13, 9, 8, 11, 6),
+  O3 = c(8, 5, 6, 15, 10, 12, 15, 14, 11, 9, 3, 7, 10, 7, 10, 10, 7, 4, 2, 5, 4, 6, 11, 2, 23, 6, 11, 10, 8, 2, 7, 8, 4, 24, 9, 10, 12, 18, 25, 6, 14, 5),
+  HC = c(2, 3, 3, 4, 3, 4, 5, 4, 3, 4, 3, 3, 3, 3, 3, 3, 3, 4, 3, 3, 4, 3, 4, 3, 4, 3, 3, 3, 3, 3, 3, 4, 3, 3, 2, 2, 2, 2, 3, 2, 3, 2)
+)
+
+
+
+S <- cov(X)
+
+Seigen <- (eigen(S))$values
+Svectors <- (eigen(S))$vectors
+
+as.data.frame(Svectors)
+
+```
+
+
+Miramos qué tanto porcentaje de varianza explican los componentes:
+
+```{r}
+porc <- NULL
+
+table_porc <- matrix(NA, nrow = 7, ncol = 1)
+
+for (i in 1:7) {
+  porc[i] <- Seigen[i]/sum(Seigen)
+  
+  table_porc[i,] <- rbind(porc[i])
+  
+}
+
+data.frame(Componente.Principal = 1:7, Porcentaje.Explicado = table_porc, Porcentaje.Acumulado = cumsum(porc))
+```
+
+Como se puede ver, tan solo las dos primeras componentes principales ya explican el 95.4% de varianza aproximadamente. Luego, si es posible reducir la dimensionalidad a 2.
+
+*Usando $\mathbf{R}$*
+
+
+```{r}
+R <- cor(X)
+
+Reigen <- (eigen(R))$values
+Rvectors <- (eigen(R))$vectors
+
+as.data.frame(Rvectors)
+
+
+```
+Y miramos los porcentajes de varianza explicados:
+
+```{r}
+Rporc <- NULL
+
+Rtable_porc <- matrix(NA, nrow = 7, ncol = 1)
+
+for (i in 1:7) {
+  Rporc[i] <- Reigen[i]/7
+  
+  Rtable_porc[i,] <- rbind(Rporc[i])
+  
+}
+
+data.frame(Componente.Principal = 1:7, Porcentaje.Explicado = table_porc, Porcentaje.Acumulado = cumsum(Rporc))
+```
+
+En este caso, se observa que las \textbf{cuatro primeras componentes principales} logran capturar \textbf{el 80\% de la varianza}, lo que permite reducir la dimensionalidad del problema de \textbf{siete variables originales a solo cuatro} sin perder demasiada información.
+
+Es evidente que la elección de la \textbf{matriz de análisis} influye en los resultados. Cuando se utiliza la \textbf{matriz de correlaciones}, se obtiene una representación más equilibrada debido a la estandarización de las variables, lo que facilita la identificación de aquellas que contribuyen más significativamente a cada componente. Por otro lado, al emplear la \textbf{matriz de covarianzas}, las diferencias en las unidades de medida pueden generar una percepción distorsionada sobre la importancia relativa de las variables en la variabilidad total.
+
+Esta diferencia se refleja claramente en los resultados: con la matriz de covarianzas (\(\mathbf{S}\)), \textbf{las dos primeras componentes principales} explicaban \textbf{más del 90\% de la variabilidad}, mientras que con la matriz de correlaciones (\(\mathbf{R}\)), fue necesario incluir \textbf{cinco componentes} para alcanzar un nivel de explicación comparable.
+    
+## 8.25 
+
+Refiérase a los datos de horas extra de la policía en el Ejemplo 8.10. Construya un gráfico de control alternativo, basado en la suma de cuadrados \( d^2_{ij} \), para monitorear la variación no explicada en las observaciones originales resumidas por los componentes principales adicionales.
+
+
+```{r, echo=FALSE}
+principal_components <- data.frame(
+  Period = 1:16,
+  Y1 = c(2044.9, -2143.7, -177.8, -2186.2, -878.6, 526.1, 403.1, -1988.9, 132.8, -2787.3, 283.4, 761.6, -496.3, 2362.6, 1917.8, 2187.7),
+  Y2 = c(-588.2, -686.2, -464.6, -450.5, -545.7, -1045.4, 66.8, -801.8, 563.7, -1367.4, 3936.9, 560.0, 244.7, -1193.7, -782.0, -373.8),
+  Y3 = c(425.8, 883.6, 707.5, -184.0, 115.7, 281.2, 340.6, -1437.3, 125.3, 7.8, -0.9, -2153.6, 966.5, -165.5, -82.9, 170.1),
+  Y4 = c(-189.1, -565.9, 736.3, 443.7, 296.4, 620.5, -135.5, -148.8, 68.2, 169.4, 276.2, -418.8, -1142.3, 270.6, -196.8, -84.1),
+  Y5 = c(-209.8, -441.5, 38.2, -325.3, 437.5, 142.7, 521.2, 61.6, 611.5, -202.3, -159.6, 28.2, 182.6, -344.9, -89.9, -250.2)
+)
+
+police_hours <- data.frame(
+  Legal_Appearances_Hours = c(3387, 3109, 2670, 3125, 3469, 3120, 3671, 4531, 3678, 3238, 3135, 5127, 3728, 3506, 3824, 3516),
+  Extraordinary_Event_Hours = c(2200, 875, 957, 1758, 868, 398, 1603, 523, 2034, 1136, 5326, 1658, 1945, 344, 807, 1223),
+  Holdover_Hours = c(1181, 3532, 2502, 4510, 3032, 2130, 1982, 4675, 2354, 4606, 3044, 3340, 2111, 1291, 1365, 1175),
+  COA_Hours = c(14861, 11367, 13329, 12328, 12847, 13979, 13528, 12699, 13534, 11609, 14189, 15052, 12236, 15482, 14900, 15078),
+  Meeting_Hours = c(236, 310, 1182, 1208, 1385, 1053, 1046, 1100, 1349, 1150, 1216, 660, 299, 206, 239, 161)
+)
+
+eigenvectors <- data.frame(
+  Variable = c("Appearances overtime (x1)", "Extraordinary event (x2)", "Holdover hours (x3)", "COA hours (x4)", "Meeting hours (x5)"),
+  e1 = c(0.046, 0.039, -0.658, 0.734, -0.155),
+  e2 = c(-0.048, 0.985, 0.107, 0.069, 0.107),
+  e3 = c(0.629, -0.077, 0.582, 0.503, 0.081),
+  e4 = c(-0.643, -0.151, 0.250, 0.397, 0.586),
+  e5 = c(0.432, -0.007, -0.392, -0.213, 0.784)
+)
+
+eigenvalues <- c(2770226, 1429026, 628129, 221138, 99824)
+```
+
+Para calular las distancias al cuadrado tomamos la suma de cuadrados de
+los componentes no explicados:
+
+$$
+d^2_{ij} = (x_j - \bar{x} - \hat{y}_{j1} \hat{e}_1 - \hat{y}_{j2} \hat{e}_2)' 
+(x_j - \bar{x} - \hat{y}_{j1} \hat{e}_1 - \hat{y}_{j2} \hat{e}_2)
+$$
+
+Notemos que, al insertar la identidad $\hat{E} \hat{E}' = I$, también
+obtenemos:
+
+$$
+d^2_{ij} = (x_j - \bar{x} - \hat{y}_{j1} \hat{e}_1 - \hat{y}_{j2} \hat{e}_2)' 
+\hat{E} \hat{E}' 
+(x_j - \bar{x} - \hat{y}_{j1} \hat{e}_1 - \hat{y}_{j2} \hat{e}_2) 
+= \sum_{k=3}^{p} \hat{y}^2_{jk}
+$$
+
+```{r, fig.width=6, fig.height=8, fig.align='center', warning=FALSE}
+d2 <- rowSums(principal_components[, 4:6]^2)
+
+c=var(d2)/(2*mean(d2))
+
+v=2*(mean(d2)^2/var(d2))
+
+colors<-rep("black",nrow(police_hours))
+colors[which(d2>=c*qchisq(.95,v))]="red"
+
+#png("810d.png", width = 600, height = 800, res = 150)
+
+plot(1:nrow(police_hours), d2, type = "b", main = "Suma de cuadrados de \n los componentes no explicados \n de la j-esima observacion",
+     xlab = "Periodo", ylab = "SS", pch=19, col=colors)
+
+abline(h=c*qchisq(.95,v), col="red")
+text(15, y =c*qchisq(.95,v), labels="UCL", col="red", pos=3)
+
+#dev.off()
+
+```
+
+El periodo 12 está fuera de control. Se concluye lo mismo que se
+concluyo usando únicamente los dos primeros componentes principales.
+
+# 2. Parte de Análisis Factorial
+## 9.1 Show that the covariance matrix
+
+\[
+\mathbf{\rho} =
+\begin{bmatrix}
+1.0 & 0.63 & 0.45 \\
+0.63 & 1.0 & 0.35 \\
+0.45 & 0.35 & 1.0
+\end{bmatrix}
+\]
+
+for the \( p = 3 \) standardized random variables \( Z_1, Z_2, \) and \( Z_3 \) can be generated by the \( m = 1 \) factor model
+
+\[
+Z_1 = 0.9 F_1 + \epsilon_1
+\]
+
+\[
+Z_2 = 0.7 F_1 + \epsilon_2
+\]
+
+\[
+Z_3 = 0.5 F_1 + \epsilon_3
+\]
+
+where \( \text{Var}(F_1) = 1 \), \( \text{Cov}(\epsilon, F_1) = 0 \), and
+
+\[
+\mathbf{\Psi} = \text{Cov}(\epsilon) =
+\begin{bmatrix}
+0.19 & 0 & 0 \\
+0 & 0.51 & 0 \\
+0 & 0 & 0.75
+\end{bmatrix}
+\]
+
+That is, write \( \mathbf{\rho} \) in the form
+
+\[
+\mathbf{\rho} = \mathbf{L} \mathbf{L}' + \mathbf{\Psi}
+\]
+
+
+
+
+$$\\[1in]$$
+
+```{r}
+rho <- matrix(c(1.0, 0.63, 0.45,
+                0.63, 1.0, 0.35,
+                0.45, 0.35, 1.0), 
+              nrow = 3, ncol = 3, byrow = TRUE)
+
+  
+```
+
+
+
+Se tienen:
+
+```{r}
+L <- cbind(c(.9, .7, .5))
+
+psi <- diag(c(.19, .51, .75))
+
+```
+Vea que $$\mathbf{L} \mathbf{L}^t + \mathbf{\Psi}$$ es igual a 
+
+```{r}
+L%*%t(L) + psi
+```
+```{r}
+all.equal(L%*%t(L) + psi, rho)
+```
+
+
+## 9.2. Use the information in Exercise 9.1.
+
+(a) Calculate communalities \( h_i^2 \), \( i = 1,2,3 \), and interpret these quantities.
+
+$$\\[1in]$$
+
+Las comunalidades se pueden calcular como: $h_i^2=\ell_{i1}^2$ para $i=1,2,3$
+
+```{r}
+h_i <- L^2
+
+knitr::kable(h_i,col.names = "Comunalidades")
+```
+Entonces, se tiene que 
+
+$$
+h_1^2 = 0.81\\
+h_2^2= 0.49 \\
+h_3^2 = 0.25
+$$
+Esto nos indica que el único factor que se tiene explica un 81% de la varianza de la primera variable. Para la variable 2, el factor está explicand oun 49% de su varianza. Por último, para la variable 3, el factor está explicand oun 25% de su varianza.
+
+(b) Calculate \( \text{Corr}(Z_i, F_1) \) for \( i = 1,2,3 \). Which variable might carry the greatest weight in "naming" the common factor? Why?
+
+$$\\[1in]$$
+
+Como las variables se encuentran estandarizadas, $\operatorname{Corr}(Z_i, F_1)=\operatorname{Cov}(Z_i, F_1)$ para $i=1,2,3$.
+
+
+Por lo tanto, por un resultado se tiene que
+
+$$
+\operatorname{Cov}(Z_1, F_1) = \ell_{11} = 0.9 \\
+\operatorname{Cov}(Z_2, F_1) = \ell_{12} = 0.7 \\
+\operatorname{Cov}(Z_3, F_1) = \ell_{13} = 0.5
+$$
+
+Como la correlación entre la primera variable y el factor es de 0.9 (la más alta), entonces esta es la variable que más peso tiene sobre el factor común.
+
+## 9.3 Eigenvalues and Eigenvectors of the Correlation Matrix
+
+The eigenvalues and eigenvectors of the correlation matrix $\mathbf{\rho}$ in Exercise 9.1 are:
+
+\[
+\lambda_1 = 1.96, \quad \mathbf{e'}_1 = [ .625, .593, .507 ]
+\]
+
+\[
+\lambda_2 = 0.68, \quad \mathbf{e'}_2 = [ -0.219, -0.491, 0.843 ]
+\]
+
+\[
+\lambda_3 = 0.36, \quad \mathbf{e'}_3 = [ 0.749, -0.638, -0.177 ]
+\]
+
+### (a) Factor Model Calculation
+
+Assuming an \( m = 1 \) factor model, calculate the loading matrix **L** and the matrix of specific variances **Ψ** using the principal component solution method. Compare the results with those in Exercise 9.1.
+
+
+$$\\[1in]$$
+
+Se calcula la matriz L para $m=1$
+
+```{r echo=FALSE}
+lambdas <- c(1.96, .68, .36)
+vectors <- cbind(c(.625, .593, .507), c(-.219, -.491, .843), c(.749, -.638, -.177))
+```
+
+```{r}
+L <- cbind(sqrt(lambdas[1]) * vectors[,1])
+
+L_L_t <- L %*% t(L)
+
+psi <- matrix(0, 3, 3)
+
+for (i in 1:3) {
+  psi[i,i] <- rho[i,i] - L[i]^2
+}
+
+psi <- as.data.frame(psi)
+
+colnames(psi) <- NULL
+rownames(psi) <- NULL
+```
+
+
+```{r}
+
+knitr::kable(L, col.names = c("L1"))
+knitr::kable(psi, col.names = c("SP1","SP2","SP3"))
+
+```
+Note que los resultados sí cambian si se comparan con el ejercicio 9.1. Especialmente la matriz de varianzas del factor.
+
+### (b) Proportion of Total Variance Explained
+
+What proportion of the total population variance is explained by the first common factor?
+
+$$\\[1in]$$
+
+La proporción de varianza explicada por el primer factor común es 
+
+```{r}
+lambdas[1]/sum(diag(rho))
+```
+Es decir, el primer factor común explica un 65.3% de la varianza total poblacional.
+
+
+
+
+## 9.9
+
+En un estudio sobre la preferencia de licores en Francia, Stoetzel
+\cite{Stoetzel} recopiló clasificaciones de preferencia de $p = 9$ tipos
+de licores de una muestra de $n = 1442$ individuos. Un análisis
+factorial de la matriz de correlación muestral $9 \times 9$ de los
+rangos de ordenamiento proporcionó las cargas factoriales estimadas.
+
+```{r, echo=FALSE}
+factor_loadings <- data.frame(
+  Variable = c("Liquors", "Kirsch", "Mirabelle", "Rum", "Marc", "Whiskey", "Calvados", "Cognac", "Armagnac"),
+  F1 = c(0.64, 0.50, 0.46, 0.17, -0.29, -0.29, -0.49, -0.52, -0.60),
+  F2 = c(0.02, -0.06, -0.24, 0.74, 0.66, -0.08, -0.20, -0.03, -0.17),
+  F3 = c(0.16, -0.10, -0.19, 0.97, -0.39, 0.09, -0.04, 0.42, 0.14)
+)
+
+knitr::kable(factor_loadings)
+```
+
+Dado estos resultados, Stoetzel concluyó lo siguiente:\
+El principio principal de la preferencia por los licores en Francia es
+la distinción entre licores dulces y fuertes.\
+El segundo factor motivador es el precio, lo que se puede entender al
+recordar que el licor es tanto un bien costoso como un artículo de
+consumo ostentoso.\
+Excepto en el caso de los dos licores más populares y menos costosos
+(rum y marc), este segundo factor juega un papel mucho menor en la
+producción de juicios de preferencia.\
+El tercer factor tiene un componente sociológico y se relaciona
+principalmente con la variabilidad regional de los juicios. (Ver
+\cite{Stoetzel}, p. 11).
+
+### (a)
+
+Dado lo que sabe sobre los distintos tipos de licores, ¿parece razonable
+la interpretación de Stoetzel?
+
+Analizando los factores tenemos que:
+
+-   **Primer Factor (Dulce vs. Fuerte)**
+    -   Distingue bien entre licores dulces (Mirabelle, Kirsch) y
+        licores fuertes (Whiskey, Cognac, Armagnac). Esto es coherente
+        con la primera interpretación de Stoetzel sobre la distinción
+        entre licores dulces y fuertes.
+-   **Segundo Factor (Precio y Estatus Social)**
+    -   Está fuertemente relacionado con el precio y el prestigio de los
+        licores. Cognac y Armagnac son conocidos por ser caros y símbolo
+        de estatus. En contraste, Rum y Marc son más baratos, pero
+        siguen siendo populares. Respecot a lo que Stoetzel menciona,
+        que el precio no siempre es determinante, es razonable
+        considerarlo porque existen otros factores que influyen en la
+        preferencia.
+-   **Tercer Factor (Variabilidad Regional y Sociológica)**\
+    Algunos licores tienen fuertes asociaciones regionales, como el
+    Calvados en Normandía o el Cognac en la región de Cognac. Esto
+    respalda la idea de que las preferencias de licor están
+    influenciadas por factores culturales y geográficos.
+
+### (b)
+
+Graficar los pares de cargas factoriales para los dos primeros
+factores.\
+Realizar una rotación ortogonal de los ejes de los factores. Generar
+cargas factoriales rotadas aproximadas. Interpretar las cargas
+factoriales rotadas de los dos primeros factores. ¿Su interpretación
+concuerda con la interpretación de Stoetzel de estos factores a partir
+de las cargas no rotadas? Explique.
+
+```{r, fig.width=6, fig.height=8, fig.align='center',echo=FALSE, warning=FALSE}
+#png("99b.png", width = 600, height = 800, res = 150)
+plot(factor_loadings$F1, factor_loadings$F2, xlim = c(-1,1.3),
+     ylim = c(-.5,1.3), type = "p", pch=19, bty="n", tck=0, axes=FALSE,
+     xlab = "", ylab = "", cex=1, asp=4/3, col="purple" )
+segments(-1,0,1.0, col = "black")
+segments(0,-0.5,0,1, col = "black")
+axis(1, labels = TRUE, at = seq(-1, 1, 0.5),tick = FALSE, line=NA, pos = c(0,0), cex.axis=.7,mgp = c(0, 0.3, 0))
+axis(2, labels = TRUE, at = seq(-.5, 1, 0.5), tick = FALSE, line=NA,pos = c(0,0), cex.axis=.7,mgp = c(0, 0.3, 0))
+text(0,1.2, "Factor 2")
+text(1.2,0, "Factor 1")
+text(factor_loadings$F1, factor_loadings$F2, 
+     labels = factor_loadings$Variable, pos = 3, cex = 0.8)
+
+#dev.off()
+```
+
+Ahora realizamos la rotación usando Varimax:
+
+```{r}
+if (!require("GPArotation")) install.packages("GPArotation", dependencies=TRUE)
+library(GPArotation)
+
+factor_matrix <- as.matrix(factor_loadings[, 2:4])
+rotated_factors <- varimax(factor_matrix)
+rotated_loadings <- as.matrix(rotated_factors$loadings)
+
+rotated_df <- data.frame(Variable = factor_loadings$Variable, rotated_loadings)
+rotated_df<-rotated_df[1:9,]
+
+b<-rotated_df$rotated_loadings
+
+rotated_df<-data.frame(Variable=factor_loadings$Variable,b)
+
+knitr::kable(rotated_df)
+```
+
+Después de aplicar la rotación Varimax, analizamos las nuevas cargas
+factoriales y las comparamos con la interpretación inicial de Stoetzel
+sobre las preferencias de licores en Francia.
+
+Factor 1 (F1): Diferenciación entre licores dulces y fuertes. - Licores
+dulces (Kirsch, Mirabelle, Liquors) con cargas positivas. - Licores
+fuertes (Cognac, Armagnac, Calvados) con cargas negativas.
+
+Factor 2 (F2): Variabilidad regional - Marc y Calvados tienen altas
+cargas positivas. - Whiskey y Cognac tienen cargas cercanas a 0.
+
+Por tanto, se mantiene la interpretación original de Stoetzel sobre la
+distinción para los precios en el primer factor y confirma la teoría
+sobre la importancia de la regionalidad para el segundo factor.
+
+## 9.10 Correlation Matrix for Chicken-Bone Measurements
+
+The correlation matrix for chicken-bone measurements (see Example 9.14) is:
+
+\[
+\begin{bmatrix}
+1.000 & 0.505 & 0.569 & 0.602 & 0.621 & 0.603 \\
+0.505 & 1.000 & 0.422 & 0.467 & 0.482 & 0.450 \\
+0.569 & 0.422 & 1.000 & 0.926 & 0.877 & 0.878 \\
+0.602 & 0.467 & 0.926 & 1.000 & 0.874 & 0.894 \\
+0.621 & 0.482 & 0.877 & 0.874 & 1.000 & 0.937 \\
+0.603 & 0.450 & 0.878 & 0.894 & 0.937 & 1.000
+\end{bmatrix}
+\]
+
+
+
+The following estimated factor loadings were extracted by the maximum likelihood procedure:
+
+| Variable | Estimated Factor Loadings \( F_1 \) | \( F_2 \) | Varimax Rotated Estimated Factor Loadings  \( F_1^* \) | \( F_2^* \) |
+|----------|------------------------|----------------|---------------------------------|----------------|
+| 1. Skull length   | 0.602 | 0.200 | 0.484 | 0.411 |
+| 2. Skull breadth  | 0.467 | 0.154 | 0.375 | 0.319 |
+| 3. Femur length   | 0.926 | 0.143 | 0.603 | 0.717 |
+| 4. Tibia length   | 1.000 | 0.000 | 0.519 | 0.855 |
+| 5. Humerus length | 0.874 | 0.476 | 0.861 | 0.499 |
+| 6. Ulna length    | 0.894 | 0.327 | 0.744 | 0.594 |
+
+
+Using the **unrotated** estimated factor loadings, obtain the maximum likelihood estimates of the following:
+
+### (a) The specific variances.
+
+```{r, echo=FALSE}
+
+R <- matrix(c(
+  1.000, 0.505, 0.569, 0.602, 0.621, 0.603,
+  0.505, 1.000, 0.422, 0.467, 0.482, 0.450,
+  0.569, 0.422, 1.000, 0.926, 0.877, 0.878,
+  0.602, 0.467, 0.926, 1.000, 0.874, 0.894,
+  0.621, 0.482, 0.877, 0.874, 1.000, 0.937,
+  0.603, 0.450, 0.878, 0.894, 0.937, 1.000
+), nrow = 6, byrow = TRUE)
+
+
+L <- matrix(c(
+  0.602, 0.200,
+  0.467, 0.154,
+  0.926, 0.143,
+  1.000, 0.000,
+  0.874, 0.476,
+  0.894, 0.327
+), nrow = 6, byrow = TRUE)
+
+
+psi <- diag(R - L%*%t(L))
+psi<-diag(psi)
+
+
+```
+Luego, las varianzas específicas son
+
+```{r}
+
+
+
+
+Var_Esp <- diag(R - L %*% t(L))
+knitr::kable(Var_Esp,col.names = "Varianzas Específicas")
+```
+
+
+### (b) The communalities.
+
+Las comunalidades las obtenemos sumando los elementos de las filas de la matriz $\hat{\mathbf{L}} \hat{\mathbf{L}}^t $ o también con $1 - \hat{\psi}_i$
+
+```{r}
+
+knitr::kable(cbind(1 - Var_Esp),col.names = "Comunalidades")
+
+```
+
+
+
+### (c) The proportion of variance explained by each factor.
+
+Estos los podemos obtener con ayuda de la matriz de factores $\hat{\mathbf{L}}$
+
+```{r}
+p <- 6
+
+lambda_1 <- sum(L[,1]^2)
+
+lambda_2 <- sum(L[,2]^2)
+
+```
+Luego, la proporción de varianza explicada por el factor 1 está dada por:
+
+```{r}
+lambda_1/p
+```
+Es decir, un 66.7% aproximadamente.
+
+Y la proporción de varianza explicada por el factor 2:
+
+```{r}
+lambda_2/p
+```
+Un 6.96% aproximadamente.
+
+### (d) The Residual Matrix
+\[
+\mathbf{R} - \hat{\mathbf{L}}_z \hat{\mathbf{L}}_z' - \hat{\mathbf{\Psi}}_z.
+\]
+
+```{r}
+knitr::kable(R - L %*% t(L) - psi)
+```
+
+
+## 9.11
+
+Refer to Exercise 9.10. Compute the value of the varimax criterion using
+both unrotated and rotated estimated factor loadings. Comment on the
+results.
+
+```{r, echo=FALSE}
+factor_loadings <- data.frame(
+  Variable = c("Skull length", "Skull breadth", "Femur length", 
+               "Tibia length", "Humerus length", "Ulna length"),
+  F1_Estimated = c(0.602, 0.467, 0.926, 1.000, 0.874, 0.894),
+  F2_Estimated = c(0.200, 0.154, 0.143, 0.000, 0.476, 0.327),
+  F1_Rotated = c(0.484, 0.375, 0.603, 0.519, 0.861, 0.744),
+  F2_Rotated = c(0.411, 0.319, 0.717, 0.855, 0.499, 0.594)
+)
+
+communalities <- c(0.4024, 0.2418, 0.8779, 1.0000, 0.9905, 0.9062)
+```
+
+Usando (9-45), tenemos que:
+
+$$
+\nu = \frac{1}{p} \sum_{j=1}^{m} \left[ \sum_{i=1}^{p} \tilde{\ell}_{ij}^4 - \left( \frac{\sum_{i=1}^{p} \tilde{\ell}_{ij}^2}{p} \right)^2 \right]
+$$
+
+Donde $$
+\tilde{\ell}^*_{ij} = \frac{\hat{\ell}_{ij}}{\hat{h}_i}
+$$
+
+Realizando los calculos:
+
+Para los factores de carga originales
+
+```{r}
+p<-length(communalities)
+a <- factor_loadings$F1_Estimated / sqrt(communalities)
+b <- factor_loadings$F2_Estimated / sqrt(communalities)
+c<-(sum(a^2))^2/p
+d<-(sum(b^2))^2/p
+
+V=(1/p)*(sum(a^4)-c+sum(b^4)-d)
+
+round(V,4)
+```
+
+Para los factores rotados:
+
+```{r}
+a <- factor_loadings$F1_Rotated / sqrt(communalities)
+b <- factor_loadings$F2_Rotated / sqrt(communalities)
+c<-(sum(a^2))^2/p
+d<-(sum(b^2))^2/p
+
+V=(1/p)*(sum(a^4)-c+sum(b^4)-d)
+
+round(V,4)
+```
+
+En este caso, las cargas no rotadas parecen ofrecer una mejor claridad
+conceptual. A pesar de que la varianza explicada aumenta con la
+rotación, los factores resultantes pueden ser menos intuitivos, lo que
+sugiere que la estructura sin rotar refleja mejor la naturaleza de los
+datos.
+
+## 9.12 The covariance matrix for the logarithms of turtle measurements (see Example 8.4) is:
+
+\[
+\mathbf{S} = 10^{-3}
+\begin{bmatrix}
+11.072 & 8.019 & 6.417 \\
+8.160 & 6.005 & 6.773
+\end{bmatrix}
+\]
+
+
+
+The following maximum likelihood estimates of the factor loadings for an \( m = 1 \) model were obtained:
+
+\[
+\begin{array}{|c|c|}
+\hline
+\textbf{Variable} & \textbf{Estimated Factor Loadings} \, F_1 \\
+\hline
+1. \ln(\text{length}) & 0.1022 \\
+2. \ln(\text{width}) & 0.0752 \\
+3. \ln(\text{height}) & 0.0765 \\
+\hline
+\end{array}
+\]
+
+
+Using the estimated factor loadings, obtain the maximum likelihood estimates of each of the following:
+
+### a) Specific variances.  
+
+Usando $\hat{\mathbf{L}}\hat{\mathbf{L}}^t$ y $\mathbf{S}_n$,
+
+```{r}
+
+n <- 24
+
+S <- 10^(-3) * matrix(c(
+  11.072, 8.019, 8.160,
+  8.019, 6.417, 6.005,
+  8.160, 6.005, 6.773
+), nrow = 3, byrow = TRUE)
+
+S_n <- (n-1)/n * S
+
+
+L <- matrix(c(0.1022, 0.0752, 0.0765), nrow = 3, ncol = 1, byrow = FALSE)
+
+
+
+```
+Luego, las varianzas específicas son:
+
+```{r}
+psi <- diag(S_n - L%*%t(L))
+psi<-diag(psi)
+  
+Var_Esp <- cbind(diag(psi))
+
+knitr::kable(Var_Esp,col.names = "Varianzas Específicas")
+```
+
+
+### b) Communalities.
+
+Como $m=1$, $\hat{h}_i=\hat{l}_{i1}^2$,
+
+```{r}
+
+Comunalidades <- L^2
+
+knitr::kable(Comunalidades, col.names = "Comunalidades")
+```
+
+
+### c) Proportion of variance explained by the factor.  
+
+Sumamos los $\hat{h}_{i1}^2$ y lo dividimos sobre la traza de $\mathbf{S}_n$
+
+```{r}
+p <- 3
+
+sum(L^2)/sum(diag(S_n))
+```
+Es decir, el factor explica un 94\% de la varianza.
+
+### d) The residual matrix \( S_n - \hat{L} \hat{L}' - \hat{\Psi} \).  
+
+*Hint:* Convert \( \mathbf{S} \) to \( S_n \).
+
+```{r}
+knitr::kable(S_n - L %*% t(L) - psi)
+```
+
+
+$$\\[1in]$$
+
+
+## 9.15. Correlation Matrix
+
+Hirschey and Wichern [7] investigate the consistency, determinants, and uses of accounting and market-value measures of profitability. As part of their study, a factor analysis of accounting profit measures and market estimates of economic profits was conducted. The correlation matrix of accounting historical, accounting replacement, and market-value measures of profitability for a sample of firms operating in 1977 is as follows:
+
+\[
+\mathbf{R} =
+\begin{bmatrix}
+1.000 & 0.738 & 0.731 & 0.828 & 0.681 & 0.712 & 0.625 & 0.604 \\
+0.738 & 1.000 & 0.520 & 0.688 & 0.831 & 0.543 & 0.322 & 0.303 \\
+0.731 & 0.520 & 1.000 & 0.652 & 0.513 & 0.826 & 0.579 & 0.617 \\
+0.828 & 0.688 & 0.652 & 1.000 & 0.887 & 0.867 & 0.639 & 0.563 \\
+0.681 & 0.831 & 0.513 & 0.887 & 1.000 & 0.692 & 0.419 & 0.352 \\
+0.712 & 0.543 & 0.826 & 0.867 & 0.692 & 1.000 & 0.608 & 0.610 \\
+0.625 & 0.322 & 0.579 & 0.639 & 0.419 & 0.608 & 1.000 & 0.937 \\
+0.604 & 0.303 & 0.617 & 0.563 & 0.352 & 0.610 & 0.937 & 1.000
+\end{bmatrix}
+\]
+
+
+The following rotated principal component estimates of factor loadings for an \(m = 3\) factor model were obtained:
+
+\[
+\begin{array}{|l|ccc|}
+\hline
+\textbf{Variable} & F_1 & F_2 & F_3 \\
+\hline
+\text{Historical return on assets} & 0.433 & 0.612 & 0.499 \\
+\text{Historical return on equity} & 0.125 & 0.892 & 0.234 \\
+\text{Historical return on sales} & 0.296 & 0.238 & 0.887 \\
+\text{Replacement return on assets} & 0.406 & 0.708 & 0.483 \\
+\text{Replacement return on equity} & 0.198 & 0.895 & 0.283 \\
+\text{Replacement return on sales} & 0.331 & 0.414 & 0.789 \\
+\text{Market Q ratio} & 0.928 & 0.160 & 0.294 \\
+\text{Market relative excess value} & 0.910 & 0.079 & 0.355 \\
+\hline
+\end{array}
+\]
+
+### Cumulative proportion of total variance explained
+
+\[
+\begin{array}{|c|c|c|}
+\hline
+F_1 & F_2 & F_3 \\
+\hline
+0.287 & 0.628 & 0.908 \\
+\hline
+\end{array}
+\]
+
+
+
+### a) Using the estimated factor loadings, determine the specific variances and communalities.
+
+```{r echo=FALSE}
+R <- matrix(c(1.000, 0.738, 0.731, 0.828, 0.681, 0.712, 0.625, 0.604,
+              0.738, 1.000, 0.520, 0.688, 0.831, 0.543, 0.322, 0.303,
+              0.731, 0.520, 1.000, 0.652, 0.513, 0.826, 0.579, 0.617,
+              0.828, 0.688, 0.652, 1.000, 0.887, 0.867, 0.639, 0.563,
+              0.681, 0.831, 0.513, 0.887, 1.000, 0.692, 0.419, 0.352,
+              0.712, 0.543, 0.826, 0.867, 0.692, 1.000, 0.608, 0.610,
+              0.625, 0.322, 0.579, 0.639, 0.419, 0.608, 1.000, 0.937,
+              0.604, 0.303, 0.617, 0.563, 0.352, 0.610, 0.937, 1.000), 
+            nrow = 8, ncol = 8, byrow = TRUE)
+
+
+rownames(R) <- colnames(R) <- c("HRA", "HRE", "HRS", "RRA", "RRE", "RRS", "Q", "REV")
+
+R
+
+L <- matrix(c(0.433, 0.612, 0.499,
+              0.125, 0.892, 0.234,
+              0.296, 0.238, 0.887,
+              0.406, 0.708, 0.483,
+              0.198, 0.895, 0.283,
+              0.331, 0.414, 0.789,
+              0.928, 0.160, 0.294,
+              0.910, 0.079, 0.355), 
+            nrow = 8, ncol = 3, byrow = TRUE)
+
+```
+
+Usando las cargas estimadas de los factores:
+
+```{r}
+rownames(R) <- colnames(R) <- NULL
+  
+psi <- diag(R - L%*%t(L))
+psi<-diag(psi)
+
+Var_Esp <- diag(psi)
+
+
+```
+
+
+
+
+Las varianzas específicas y las comunalidades son:
+
+```{r}
+Comunalidades <- NULL
+
+for (i in 1:nrow(L)) {
+  Comunalidades[i] <- sum(L[i,]^2)
+}
+
+knitr::kable(cbind( Var_Esp,Comunalidades),col.names =c("Varianzas Específicas","Comunalidades"))
+```
+
+
+### b) Determine the residual matrix:
+
+\[
+\mathbf{R} - \hat{\mathbf{L}}_z \hat{\mathbf{L}}_z' - \hat{\mathbf{\Psi}}_z.
+\]
+
+Given this information and the cumulative proportion of total variance explained in the preceding table, does an \(m = 3\) factor model appear appropriate for these data?
+
+
+
+```{r}
+knitr::kable(R-L %*% t(L)-psi )
+```
+
+### (c) Assuming that estimated loadings less than 0.4 are small, interpret the three factors. Does it appear, for example, that market-value measures provide evidence of profitability distinct from that provided by accounting measures? Can you separate accounting historical measures of profitability from accounting replacement measures?
+
+```{r}
+factors <- data.frame(
+  Variable = c("HRA", "HRE", "HRS", "RRA", "RRE", "RRS", "MQR", "REV"),
+  F1 = c(0.433, 0.125, 0.296, 0.406, 0.198, 0.331, 0.928, 0.910),
+  F2 = c(0.612, 0.892, 0.238, 0.708, 0.895, 0.414, 0.160, 0.079),
+  F3 = c(0.499, 0.234, 0.887, 0.483, 0.283, 0.789, 0.294, 0.355)
+)
+```
+
+
+```{r, fig.width=6, fig.height=8, fig.align='center',echo=FALSE, warning=FALSE}
+
+
+
+plot(factors$F1, factors$F2, xlim = c(-0.3,1.5),
+     ylim = c(0,1.3), type = "p", pch=19, bty="n", tck=0, axes=FALSE,
+     xlab = "", ylab = "", cex=1, asp=1, col="magenta" )
+segments(0,0,1.0, col = "black")
+segments(0,0,0,1, col = "black")
+axis(1, labels = TRUE, at = seq(0, 1, 0.2),tick = FALSE, line=NA, pos = c(0,0), cex.axis=.7,mgp = c(0, 1, 0.2))
+axis(2, labels = TRUE, at = seq(0, 1, 0.2), tick = FALSE, line=NA,pos = c(0,0), cex.axis=.7,mgp = c(0, 0.3, 0))
+text(0,1.2, "Factor 2")
+text(1.2,0, "Factor 1")
+text(factors$F1, factors$F2, 
+     labels = factors$Variable, pos = 3, cex = 0.8)
+
+
+
+plot(factors$F1, factors$F3, xlim = c(-0.3,1.5),
+     ylim = c(0,1.3), type = "p", pch=19, bty="n", tck=0, axes=FALSE,
+     xlab = "", ylab = "", cex=1, asp=1, col="darkgreen" )
+segments(0,0,1.0, col = "black")
+segments(0,0,0,1, col = "black")
+axis(1, labels = TRUE, at = seq(0, 1, 0.2),tick = FALSE, line=NA, pos = c(0,0), cex.axis=.7,mgp = c(0, 1, 0.2))
+axis(2, labels = TRUE, at = seq(0, 1, 0.2), tick = FALSE, line=NA,pos = c(0,0), cex.axis=.7,mgp = c(0, 0.3, 0))
+text(0,1.2, "Factor 3")
+text(1.2,0, "Factor 1")
+text(factors$F1, factors$F3, 
+     labels = factors$Variable, pos = 3, cex = 0.8)
+
+
+
+
+plot(factors$F2, factors$F3, xlim = c(-0.3,1.5),
+     ylim = c(0,1.3), type = "p", pch=19, bty="n", tck=0, axes=FALSE,
+     xlab = "", ylab = "", cex=1, asp=1, col="orange3" )
+segments(0,0,1.0, col = "black")
+segments(0,0,0,1, col = "black")
+axis(1, labels = TRUE, at = seq(0, 1, 0.2),tick = FALSE, line=NA, pos = c(0,0), cex.axis=.7,mgp = c(0, 1, 0.2))
+axis(2, labels = TRUE, at = seq(0, 1, 0.2), tick = FALSE, line=NA,pos = c(0,0), cex.axis=.7,mgp = c(0, 0.3, 0))
+text(0,1.2, "Factor 3")
+text(1.2,0, "Factor 2")
+text(factors$F2, factors$F3, 
+     labels = factors$Variable, pos = 3, cex = 0.8)
+
+
+```
+
+El primer factor está relacionado con las medidas de valor de mercado (Q, REV).
+El segundo factor se asocia con medidas contables históricas sobre el patrimonio (HRE, RRE).
+El tercer factor está vinculado con medidas contables históricas sobre las ventas (HRS, RRS).
+Las medidas contables históricas sobre activos (HRA, RRA) tienen una relación débil con todos los factores.
+
+Las medidas de valor de mercado reflejan la rentabilidad de manera diferente a las medidas contables.Sin embargo, no se pueden separar claramente las medidas contables históricas de rentabilidad de las medidas contables de reemplazo
+
+## 9.16 
+
+Para verificar que la media muestral de \( \{ \hat{f}_j \} \) es cero, calculemos
+
+\[
+\sum_{j=1}^{n} \hat{f}_j.
+\]
+
+Dado que \( \hat{\Delta}^{-1} \mathbf{L}' \hat{\Psi}^{-1} \) es una matriz constante (no depende de \( j \)), podemos factorizarla fuera de la suma:
+
+\[
+\sum_{j=1}^{n} \hat{f}_j = \hat{\Delta}^{-1} \mathbf{L}' \hat{\Psi}^{-1} \sum_{j=1}^{n} (x_j - \bar{x}).
+\]
+
+Por definición,
+
+\[
+\bar{x} = \frac{1}{n} \sum_{j=1}^{n} x_j,
+\]
+
+de donde se sigue que
+
+\[
+\sum_{j=1}^{n} (x_j - \bar{x}) = 0.
+\]
+
+Entonces,
+
+\[
+\sum_{j=1}^{n} \hat{f}_j = \hat{\Delta}^{-1} \mathbf{L}' \hat{\Psi}^{-1} \cdot 0 = 0.
+\]
+
+Por consiguiente, la media muestral es
+
+\[
+\frac{1}{n} \sum_{j=1}^{n} \hat{f}_j = 0.
+\]
+
+Ahora Consideremos
+
+\[
+\sum_{j=1}^{n} (x_j - \bar{x}) \hat{f}_j.
+\]
+
+Usando \( \hat{f}_j = \hat{\Delta}^{-1} \mathbf{L}' \hat{\Psi}^{-1} (x_j - \bar{x}) \), tenemos:
+
+\[
+(x_j - \bar{x}) \hat{f}_j = (x_j - \bar{x}) \left[ \hat{\Delta}^{-1} \mathbf{L}' \hat{\Psi}^{-1} (x_j - \bar{x}) \right]'.
+\]
+
+Al sumar sobre \( j \), factorizamos nuevamente las matrices constantes:
+
+\[
+\sum_{j=1}^{n} (x_j - \bar{x}) \hat{f}_j = \hat{\Delta}^{-1} \mathbf{L}' \hat{\Psi}^{-1} \sum_{j=1}^{n} (x_j - \bar{x}) (x_j - \bar{x})' \hat{\Psi}^{-1} \mathbf{L} \hat{\Delta}^{-1}.
+\]
+
+Nótese que \( \sum_{j=1}^{n} (x_j - \bar{x}) (x_j - \bar{x})' \) es \( n \) veces la matriz de covarianza muestral \( S \). Por otro lado, en la estimación por máxima verosimilitud o WLS, las “ecuaciones normales” implican que
+
+\[
+\mathbf{L}' \hat{\Psi}^{-1} S = \mathbf{L}' \hat{\Psi}^{-1} (\mathbf{L} \hat{\Delta} + \hat{\Psi}) = \mathbf{L}' \hat{\Psi}^{-1} \mathbf{L} \hat{\Delta} + \mathbf{L}' = \hat{\Delta} \mathbf{L}' + \mathbf{L}'.
+\]
+
+(Recordemos que \( \hat{\Delta} = \mathbf{L}' \hat{\Psi}^{-1} \mathbf{L} \).)
+
+Mediante esta relación y manipulaciones lineales adicionales, se demuestra que el producto
+
+\[
+\hat{\Delta}^{-1} \mathbf{L}' \hat{\Psi}^{-1} S \hat{\Psi}^{-1} \mathbf{L} \hat{\Delta}^{-1}
+\]
+
+termina siendo \( 0 \) en la parte relevante para nuestro caso. Por tanto,
+
+\[
+\sum_{j=1}^{n} (x_j - \bar{x}) \hat{f}_j = 0.
+\]
+
+## 9.19. 
+A firm is attempting to evaluate the quality of its sales staff and is trying to find an examination or series of tests that may reveal the potential for good performance in sales.
+
+
+The firm has selected a random sample of 50 sales people and has evaluated each on 3 measures of performance: growth of sales, profitability of sales, and new-account sales. These measures have been converted to a scale, on which 100 indicates "average" performance. Each of the 50 individuals took each of 4 tests, which purported to measure creativity, mechanical reasoning, abstract reasoning, and mathematical ability, respectively. The \( n = 50 \) observations on \( p = 7 \) variables are listed in Table 9.12 on page 536.
+
+
+
+```{r, echo = FALSE}
+########################
+# (1) Cargar los datos #
+########################
+library(tibble)
+datos <- tibble::tibble(
+  Sales_growth_x1 = c(93.0, 88.8, 95.0, 101.3, 102.0, 95.8, 95.5, 110.8, 102.8, 106.8,
+                      103.3, 99.5, 103.5, 99.5, 100.0, 81.5, 101.3, 103.3, 95.3, 99.5,
+                      88.5, 99.3, 87.5, 105.3, 107.0, 93.3, 106.8, 106.8, 92.3, 106.3,
+                      106.0, 88.3, 96.0, 94.3, 106.5, 106.5, 92.0, 102.0, 108.3, 106.8,
+                      102.5, 92.5, 102.8, 83.3, 94.8, 103.5, 89.5, 84.3, 104.3, 106.0),
+  Sales_profitability_x2 = c(96.0, 91.8, 100.3, 103.8, 107.8, 97.5, 99.5, 122.0, 108.3, 120.5,
+                             109.8, 111.8, 112.5, 105.5, 107.0, 93.5, 105.3, 110.8, 104.3, 105.3,
+                             95.3, 115.0, 92.5, 114.0, 121.0, 102.0, 118.0, 120.0, 90.8, 121.0,
+                             119.5, 92.8, 103.3, 94.5, 121.5, 115.5, 99.5, 99.8, 122.3, 119.0,
+                             109.3, 102.5, 113.8, 87.3, 101.8, 112.0, 96.0, 89.8, 109.5, 118.5),
+  New_account_sales_x3 = c(97.8, 96.8, 99.0, 106.8, 103.0, 99.3, 99.0, 115.3, 103.8, 102.0,
+                           104.0, 100.3, 107.0, 102.3, 102.8, 95.0, 102.8, 103.5, 103.0, 106.3,
+                           95.8, 104.3, 95.8, 105.3, 109.0, 97.8, 107.3, 104.8, 99.8, 104.5,
+                           110.5, 96.8, 100.5, 99.0, 110.5, 107.0, 103.5, 103.3, 108.5, 106.8,
+                           109.3, 99.3, 106.8, 96.3, 99.8, 110.8, 97.3, 94.3, 106.5, 105.0),
+  Creativity_test_x4 = c(9, 7, 8, 13, 10, 10, 9, 18, 10, 14,
+                         12, 10, 16, 8, 13, 7, 11, 11, 5, 7,
+                         10, 5, 9, 12, 16, 10, 10, 10, 8, 9,
+                         18, 13, 7, 10, 18, 8, 18, 13, 15, 14,
+                         9, 13, 17, 1, 7, 18, 7, 8, 14, 12),
+  Mechanical_reasoning_test_x5 = c(12, 10, 12, 14, 15, 14, 12, 20, 17, 18,
+                                   17, 18, 17, 10, 10, 9, 12, 14, 14, 14,
+                                   12, 11, 9, 15, 19, 15, 16, 16, 10, 15,
+                                   18, 11, 15, 12, 17, 13, 16, 12, 19, 20,
+                                   13, 15, 20, 5, 16, 17, 15, 8, 12, 16),
+  Abstract_reasoning_test_x6 = c(9, 10, 12, 12, 12, 11, 9, 15, 13, 11,
+                                 12, 8, 11, 11, 8, 9, 11, 11, 13, 11,
+                                 7, 11, 7, 12, 12, 7, 13, 13, 13, 11,
+                                 10, 8, 11, 10, 11, 13, 8, 14, 12, 12,
+                                 13, 6, 13, 9, 11, 12, 8, 8, 12, 11),
+  Mathematics_test_x7 = c(20, 15, 26, 29, 32, 21, 25, 51, 31, 39,
+                          32, 31, 34, 34, 34, 16, 32, 35, 30, 27,
+                          42, 42, 16, 37, 39, 23, 49, 49, 17, 44,
+                          43, 10, 27, 17, 42, 47, 18, 28, 41, 37,
+                          32, 23, 40, 15, 24, 37, 12, 9, 36, 39)
+)
+
+medias <- apply(datos, 2, mean)
+desv_est <- apply(datos, 2, sd)
+
+#############################################
+# Estandarizar las variables                #
+#############################################
+# Crear un dataframe vacío para almacenar los Z_i
+datos_estandarizados <- as.data.frame(matrix(nrow = nrow(datos), ncol = ncol(datos)))
+colnames(datos_estandarizados) <- colnames(datos)
+
+# Estandarizar cada columna: Z_i = (X_i - media) / sd
+for(i in 1:ncol(datos)) {
+  datos_estandarizados[, i] <- (datos[, i] - medias[i]) / desv_est[i]
+}
+```
+
+
+
+###(a)
+Assume an orthogonal factor model for the **standardized variables** 
+\[
+Z_i = \frac{(X_i - \mu_i)}{\sqrt{\sigma_{ii}}}, \quad i = 1,2,\dots,7.
+\]
+Obtain either the principal component solution or the maximum likelihood solution for \( m = 2 \) and \( m = 3 \) common factors.
+
+
+
+```{r, echo= FALSE}
+#####################################################
+# Análisis factorial (MLE) con 2 factores (m=2)     #
+#####################################################
+fa_2 <- factanal(
+  x = datos_estandarizados,  # Matriz/dataframe de variables estandarizadas
+  factors = 2,               # Queremos 2 factores
+  rotation = "none"          # Sin rotación (unrotated)
+)
+cat("### Modelo factorial con 2 factores (MLE, sin rotación) ###\n")
+print(fa_2)
+
+# Extraer y mostrar cargas factoriales y comunalidades
+cargas_2 <- unclass(fa_2$loadings)
+unicidad_2 <- fa_2$uniquenesses
+comunalidades_2 <- 1 - unicidad_2
+
+tabla_2 <- cbind(cargas_2, Communality = comunalidades_2)
+cat("\nCargas factoriales y comunalidades (m=2, unrotated):\n")
+print(tabla_2)
+```
+
+```{r, echo = FALSE}
+##############################################
+#  Análisis factorial (MLE) con 3 factores
+##############################################
+fa_3_unrot <- factanal(
+  x = datos_estandarizados,
+  factors = 3,
+  rotation = "none"   # Sin rotación
+)
+cat("\n### Modelo factorial con 3 factores (MLE, sin rotación) ###\n")
+print(fa_3_unrot)
+
+# Extraer cargas factoriales y comunalidades
+cargas_3_unrot <- unclass(fa_3_unrot$loadings)
+unicidad_3_unrot <- fa_3_unrot$uniquenesses
+comunalidades_3_unrot <- 1 - unicidad_3_unrot
+
+tabla_3_unrot <- cbind(cargas_3_unrot, Communality = comunalidades_3_unrot)
+cat("\nCargas factoriales y comunalidades (m=3, unrotated):\n")
+print(tabla_3_unrot)
+
+##############################################################
+# Varianza explicada por cada factor en el caso m = 3   #
+##############################################################
+# Suma de cuadrados de las cargas de cada factor
+ss_loadings_3_unrot <- colSums(cargas_3_unrot^2)
+
+# Varianza total (7 variables estandarizadas)
+var_total <- ncol(datos_estandarizados)
+
+# Varianza explicada y proporción
+var_explicada_3_unrot <- ss_loadings_3_unrot
+prop_var_3_unrot <- var_explicada_3_unrot / var_total
+
+cat("\n*** Resumen de varianza explicada (m=3, unrotated) ***\n")
+cat("Sum of squared loadings (SSL) por factor:\n", var_explicada_3_unrot, "\n")
+cat("Proporción de varianza por factor:\n", prop_var_3_unrot, "\n")
+cat("Varianza total explicada (suma de proporciones):\n", sum(prop_var_3_unrot), "\n")
+```
+
+###(b)
+Given your solution in (a), obtain the rotated loadings for \( m = 2 \) and \( m = 3 \). Compare the two sets of rotated loadings. Interpret the \( m = 2 \) and \( m = 3 \) factor solutions.
+
+```{r}
+# Factor Analysis con 2 factores, rotación Varimax
+fa_2_varimax <- factanal(
+  x = datos_estandarizados,
+  factors = 2,
+  rotation = "varimax"
+)
+cat("### Modelo factorial con 2 factores (MLE, Varimax) ###\n")
+print(fa_2_varimax)
+
+# Extraer cargas factoriales y comunalidades
+cargas_2_varimax <- unclass(fa_2_varimax$loadings)
+unicidad_2_varimax <- fa_2_varimax$uniquenesses
+comunalidades_2_varimax <- 1 - unicidad_2_varimax
+
+cat("\nCargas factoriales (rotadas) y comunalidades (m=2):\n")
+print( cbind(cargas_2_varimax, Communality = comunalidades_2_varimax) )
+
+```
+
+```{r}
+# Factor Analysis con 3 factores, rotación Varimax
+fa_3_varimax <- factanal(
+  x = datos_estandarizados,
+  factors = 3,
+  rotation = "varimax"
+)
+cat("\n### Modelo factorial con 3 factores (MLE, Varimax) ###\n")
+print(fa_3_varimax)
+
+#  cargas factoriales y comunalidades
+cargas_3_varimax <- unclass(fa_3_varimax$loadings)
+unicidad_3_varimax <- fa_3_varimax$uniquenesses
+comunalidades_3_varimax <- 1 - unicidad_3_varimax
+
+cat("\nCargas factoriales (rotadas) y comunalidades (m=3):\n")
+print( cbind(cargas_3_varimax, Communality = comunalidades_3_varimax) )
+
+```
+
+
+
+### (c) 
+List the estimated communalities, specific variances, and \( \hat{\mathbf{L}}\hat{\mathbf{L}}' + \hat{\mathbf{\Psi}} \) for \( m = 2 \) and \( m = 3 \) solutions. Compare the results. Which choice of \( m \) do you prefer at this point? Why?
+
+
+
+```{r}
+# Modelo factorial con m=2 (unrotated)
+fa_2_unrot <- factanal(datos_estandarizados, factors = 2, rotation = "none")
+
+# Extraemos cargas factoriales y unicidades
+Loadings_2 <- unclass(fa_2_unrot$loadings)   # Matriz de cargas
+Uniq_2 <- fa_2_unrot$uniquenesses            # Varianzas específicas (diagonal de Psi)
+Comm_2 <- 1 - Uniq_2                         # Comunalidades
+
+# Creamos una tabla con Comunalidades y Varianzas Específicas)
+table_m2 <- data.frame(
+  Communalities = Comm_2,
+  SpecificVariance = Uniq_2
+)
+rownames(table_m2) <- colnames(datos_estandarizados)
+
+print(table_m2)
+
+```
+
+```{r}
+# Modelo factorial con m=3 (unrotated)
+fa_3_unrot <- factanal(datos_estandarizados, factors = 3, rotation = "none")
+
+Loadings_3 <- unclass(fa_3_unrot$loadings)
+Uniq_3 <- fa_3_unrot$uniquenesses
+Comm_3 <- 1 - Uniq_3
+
+# Tabla con comunalidades y varianzas específicas
+table_m3 <- data.frame(
+  Communalities = Comm_3,
+  SpecificVariance = Uniq_3
+)
+rownames(table_m3) <- colnames(datos_estandarizados)
+print(table_m3)
+
+```
+
+```{r}
+# Mostrar la matriz de cargas para m=3
+print(Loadings_3)
+
+# Construir la matriz Psi (diagonal con varianzas específicas)
+Psi_3 <- diag(Uniq_3)
+
+# Calcular L L' + Psi
+R_hat_3 <- Loadings_3 %*% t(Loadings_3) + Psi_3
+
+cat("\nMatriz L L' + Psi para m=3:\n")
+print(R_hat_3)
+
+```
+```{r}
+# Matriz de correlaciones original
+R_original <- cor(datos_estandarizados)
+print(R_original)
+```
+
+```{r}
+#Comparar la matriz R_hat_3 con R_original
+cat("Matriz estimada (L L' + Psi, m=3):\n")
+print(R_hat_3)
+
+cat("\nMatriz de correlaciones original:\n")
+print(R_original)
+
+#Diferencia elemento a elemento:
+cat("\nDiferencia (R_original - R_hat_3):\n")
+print(R_original - R_hat_3)
+
+```
+
+
+
+### (d) 
+Conduct a test of \(H_0: \Sigma = LL' + \Psi\) versus \(H_1: \Sigma \neq LL' + \Psi\) for both \(m = 2\) and \(m = 3\) at the \(\alpha = 0.01\) level. With these results and those in Parts (b) and (c), which choice of \(m\) appears to be the best?
+
+---
+```{r}
+#####################################################
+
+fa_m2 <- factanal(
+  x         = datos_estandarizados,  # Datos estandarizados
+  factors   = 2,                     # Número de factores
+  rotation  = "none"                 # Sin rotación
+)
+
+
+
+cat("======= MODELO FACTORIAL m=2 =======\n")
+print(fa_m2)
+```
+
+
+Se rechaza la hipótesis nula \( H_0 : \Sigma = L L' + \Psi \) cuando \( m = 2 \).
+
+Esto sugiere que 2 factores no son suficientes para explicar la matriz de correlaciones.
+
+
+```{r}
+# Ajuste del modelo con 3 factores (MLE, sin rotación)
+fa_m3 <- factanal(
+  x         = datos_estandarizados,
+  factors   = 3,
+  rotation  = "none")
+  
+cat("\n======= MODELO FACTORIAL m=3 =======\n")
+print(fa_m3)
+```
+
+Por lo tanto, no se rechaza la hipótesis nula \( H_0 : \Sigma = L L' + \Psi \) cuando \( m = 3 \).
+
+Esto indica que 3 factores sí pueden explicar la matriz de correlaciones.
+
+### (e)
+Suppose a new salesperson, selected at random, obtains the test scores 
+\[
+\mathbf{x}' = [x_1, x_2, \dots, x_7] = [110, 98, 105, 15, 18, 12, 35].
+\]
+Calculate the salesperson’s factor score using the **weighted least squares** method and the **regression** method.
+
+**Note**: The components of \(\mathbf{x}\) must be standardized using the sample means and variances calculated from the original data.
+
+```{r}
+library(stats)  
+mod_factor <- factanal(
+  x        = datos_estandarizados, 
+  factors  = 3, 
+  rotation = "none"
+)
+
+# Extraer las matrices L y Psi del modelo ajustado
+L   <- unclass(mod_factor$loadings)    # Matriz de cargas factoriales (7x3)
+Psi <- diag(mod_factor$uniquenesses)   # Matriz diagonal de varianzas específicas (7x7)
+
+cat("Matriz L:\n")
+print(L)
+cat("\nMatriz diagonal Psi:\n")
+print(Psi)
+
+
+#observaciones del nuevo vendedor
+x_nuevo <- c(110, 98, 105, 15, 18, 12, 35)
+z_nuevo <- (x_nuevo - medias) / desv_est
+cat("\nVector z_nuevo (estandarizado):\n")
+print(z_nuevo)
+
+
+# Cálculo de las puntuaciones factoriales para el nuevo
+
+# (i) Método(WLS):
+#     hat{F}_{WLS} = (L' Psi^{-1} L)^{-1} L' Psi^{-1} z
+F_WLS <- solve(t(L) %*% solve(Psi) %*% L) %*% t(L) %*% solve(Psi) %*% z_nuevo
+
+cat("\n--- Puntuaciones Factoriales (WLS) ---\n")
+print(F_WLS)
+
+# (ii) Método de REGRESIÓN:
+#      hat{F}_{REG} = L (L L' + Psi)^{-1} z
+F_REG <- t(L) %*% solve( L %*% t(L) + Psi ) %*% z_nuevo
+
+
+cat("\n--- Puntuaciones Factoriales (Regresión) ---\n")
+print(F_REG)
+```
+
+Las puntuaciones factoriales obtenidas muestran que el nuevo vendedor presenta un desempeño ligeramente superior al promedio en el Factor 1, un nivel notablemente menor en el Factor 2 y un desempeño claramente elevado en el Factor 3. Esto indica que, en función de las variables que cargan de forma relevante en cada factor (por ejemplo, creatividad, razonamiento, rendimiento en ventas, etc.), el vendedor exhibe fortalezas muy marcadas en aquellas dimensiones asociadas al Factor 3, una posición moderadamente buena en el Factor 1 y ciertas debilidades (o menor habilidad relativa) en lo que represente el Factor 2.
+
+
+# 3. Regresion Multivariada
+## 7.3
+
+
+
+El modelo es:
+
+\[
+\mathbf{Y} = \mathbf{Z} \boldsymbol{\beta} + \boldsymbol{\epsilon},
+\]
+
+donde \( E(\boldsymbol{\epsilon}) = 0 \) y \( E(\boldsymbol{\epsilon} \boldsymbol{\epsilon}' ) = \text{Var}(\boldsymbol{\epsilon}) = \sigma^2 \mathbf{V} \).  
+\( \mathbf{V}_{n \times n} \) es una matriz conocida, definida positiva y de rango completo.
+
+Para encontrar los mínimos cuadrados ponderados, queremos transformar los datos observados de tal manera que los errores transformados sean incorrelacionados e idénticamente distribuidos, es decir, si \( \boldsymbol{\epsilon}^* \) es el vector de errores transformados, necesitamos que:
+
+\[
+\text{Var}(\boldsymbol{\epsilon}^*) = \sigma^2 \mathbf{I}.
+\]
+
+Observemos que, dado que \( \mathbf{V} \) es una matriz definida positiva y de rango completo, existe la raíz de Cholesky \( \mathbf{V}^{1/2} \) de \( \mathbf{V} \).  
+\( \mathbf{V}^{1/2} \) es simétrica e invertible. Además, \( \mathbf{V}^{-1/2} \) es simétrica, ya que:
+
+\[
+(\mathbf{V}^{-1/2})^T = \left[ (\mathbf{V}^{1/2})^{-1} \right]^T = \left[ (\mathbf{V}^{1/2})^T \right]^{-1} = (\mathbf{V}^{1/2})^{-1} = \mathbf{V}^{-1/2}.
+\]
+
+Premultiplicamos la ecuación del modelo por \( \mathbf{V}^{-1/2} \):
+
+\[
+\mathbf{V}^{-1/2} \mathbf{Y} = \mathbf{V}^{-1/2} \mathbf{Z} \boldsymbol{\beta} + \mathbf{V}^{-1/2} \boldsymbol{\epsilon}
+\]
+
+\[
+\Rightarrow \mathbf{Y}^* = \mathbf{Z}^* \boldsymbol{\beta} + \boldsymbol{\epsilon}^*,
+\]
+
+donde \( \mathbf{Y}^* = \mathbf{V}^{-1/2} \mathbf{Y} \), \( \mathbf{Z}^* = \mathbf{V}^{-1/2} \mathbf{Z} \) y \( \boldsymbol{\epsilon}^* = \mathbf{V}^{-1/2} \boldsymbol{\epsilon} \).  
+Entonces,
+
+\[
+\text{Var}(\boldsymbol{\epsilon}^*) = \text{Var}(\mathbf{V}^{-1/2} \boldsymbol{\epsilon}).
+\]
+
+\[
+= \mathbf{V}^{-1/2} \text{Var}(\boldsymbol{\epsilon}) (\mathbf{V}^{-1/2})^T.
+\]
+
+\[
+= \mathbf{V}^{-1/2} (\sigma^2 \mathbf{V}) \mathbf{V}^{-1/2}.
+\]
+
+\[
+= \sigma^2 \mathbf{I}.
+\]
+
+Por lo tanto, los errores transformados son incorrelacionados e idénticamente distribuidos.  
+Así, podemos usar \( \mathbf{Y}^* \) como vector de respuesta y \( \mathbf{Z}^* \) como matriz de diseño para encontrar el estimador de mínimos cuadrados ponderados \( \hat{\boldsymbol{\beta}}_W \).  
+
+Según el resultado 7.1 
+
+\[
+\hat{\boldsymbol{\beta}}_W = (\mathbf{Z}^{*T} \mathbf{Z}^*)^{-1} \mathbf{Z}^{*T} \mathbf{Y}^*.
+\]
+
+\[
+= \left[ (\mathbf{V}^{-1/2} \mathbf{Z})^T \mathbf{V}^{-1/2} \mathbf{Z} \right]^{-1} (\mathbf{V}^{-1/2} \mathbf{Z})^T \mathbf{V}^{-1/2} \mathbf{Y}.
+\]
+
+\[
+= [\mathbf{Z}^T \mathbf{V}^{-1/2} \mathbf{V}^{-1/2} \mathbf{Z}]^{-1} \mathbf{Z}^T \mathbf{V}^{-1/2} \mathbf{V}^{-1/2} \mathbf{Y}.
+\]
+
+\[
+= [\mathbf{Z}^T \mathbf{V}^{-1} \mathbf{Z}]^{-1} \mathbf{Z}^T \mathbf{V}^{-1} \mathbf{Y}.
+\]
+
+Esto demuestra la primera parte.
+
+
+Ahora bien, en el modelo \( \mathbf{Y}^* = \mathbf{Z}^* \boldsymbol{\beta} + \boldsymbol{\epsilon}^* \), donde \( \text{Var}(\boldsymbol{\epsilon}^*) = \sigma^2 \mathbf{I} \), el parámetro \( \sigma^2 \) puede ser estimado de manera insesgada por:
+
+\[
+s^2 = \frac{\boldsymbol{\epsilon}^{*T} \boldsymbol{\epsilon}^*}{n - (r + 1)}.
+\]
+
+donde \( \boldsymbol{\epsilon}^* \) es el vector de residuos:
+
+\[
+\boldsymbol{\epsilon}^* = \mathbf{Y}^* - \hat{\mathbf{Y}}^*.
+\]
+
+Sustituyendo \( \hat{\mathbf{Y}}^* = \mathbf{Z}^* \hat{\boldsymbol{\beta}}_W \):
+
+\[
+\boldsymbol{\epsilon}^* = \mathbf{Y}^* - \mathbf{Z}^* \hat{\boldsymbol{\beta}}_W.
+\]
+
+\[
+= \mathbf{V}^{-1/2} \mathbf{Y} - \mathbf{V}^{-1/2} \mathbf{Z} \hat{\boldsymbol{\beta}}_W.
+\]
+
+\[
+= \mathbf{V}^{-1/2} (\mathbf{Y} - \mathbf{Z} \hat{\boldsymbol{\beta}}_W).
+\]
+
+Sustituyendo en la expresión de \( s^2 \):
+
+\[
+s^2 = \frac{[\mathbf{V}^{-1/2} (\mathbf{Y} - \mathbf{Z} \hat{\boldsymbol{\beta}}_W)]^T [\mathbf{V}^{-1/2} (\mathbf{Y} - \mathbf{Z} \hat{\boldsymbol{\beta}}_W)]}{n - (r + 1)}.
+\]
+
+\[
+= \frac{(\mathbf{Y} - \mathbf{Z} \hat{\boldsymbol{\beta}}_W)^T \mathbf{V}^{-1/2} \mathbf{V}^{-1/2} (\mathbf{Y} - \mathbf{Z} \hat{\boldsymbol{\beta}}_W)}{n - (r + 1)}.
+\]
+
+\[
+= \frac{(\mathbf{Y} - \mathbf{Z} \hat{\boldsymbol{\beta}}_W)^T \mathbf{V}^{-1} (\mathbf{Y} - \mathbf{Z} \hat{\boldsymbol{\beta}}_W)}{n - (r + 1)}.
+\]
+
+Esto completa la demostración.
+
+## 7.4
+
+En todos los casos, el modelo es:
+
+\[
+Y_j = \beta z_j + \varepsilon_j, \quad j = 1,2,\dots,n.
+\]
+
+Las varianzas \(\operatorname{Var}(\varepsilon_j)\) son diferentes en los tres casos. En consecuencia, la matriz de varianza-covarianza \(\sigma^2 V\) de \(\varepsilon\) es diferente en cada uno de los casos.
+
+En cada caso, el vector de respuesta observado \( \mathbf{Y} \) y la matriz de diseño \( \mathbf{Z} \) son, respectivamente:
+
+\[
+\mathbf{Y} =
+\begin{pmatrix}
+Y_1 \\
+Y_2 \\
+\vdots \\
+Y_n
+\end{pmatrix}, \quad
+\mathbf{Z} =
+\begin{pmatrix}
+z_1 \\
+z_2 \\
+\vdots \\
+z_n
+\end{pmatrix}.
+\]
+
+
+
+### (a) 
+\( \operatorname{Var}(\varepsilon_j) = \sigma^2 \)
+
+Entonces, la matriz de covarianza de varianza \(\sigma^2 V\) de \(\varepsilon\) es \( \sigma^2 I \). Por lo tanto, \( V^{-1} = I \).
+
+El estimador de mínimos cuadrados ponderados se obtiene como:
+
+\[
+\hat{\beta}_W = (\mathbf{Z}^T V^{-1} \mathbf{Z})^{-1} \mathbf{Z}^T V^{-1} \mathbf{Y}
+\]
+
+\[
+= \left( \sum_{i=1}^{n} z_i^2 \right)^{-1} \sum_{i=1}^{n} z_i Y_i.
+\]
+
+Así, la estimación de la pendiente del modelo es:
+
+\[
+\hat{\beta}_W = \frac{\sum_{i=1}^{n} z_i Y_i}{\sum_{i=1}^{n} z_i^2}.
+\]
+
+Aquí, los valores de \(Y_i\) asociados a valores altos de \(z_i\) tienen mayor influencia en la estimación.
+
+### (b) 
+\( \operatorname{Var}(\varepsilon_j) = \sigma^2 z_j \)
+
+Entonces, la matriz de covarianza de varianza \( \sigma^2 V \) de \( \varepsilon \) es diagonal y tiene la forma:
+
+\[
+V =
+\begin{bmatrix}
+z_1 & 0 & \cdots & 0 \\
+0 & z_2 & \cdots & 0 \\
+\vdots & \vdots & \ddots & \vdots \\
+0 & 0 & \cdots & z_n
+\end{bmatrix}.
+\]
+
+La inversa de \( V \) es:
+
+\[
+V^{-1} =
+\begin{bmatrix}
+\frac{1}{z_1} & 0 & \cdots & 0 \\
+0 & \frac{1}{z_2} & \cdots & 0 \\
+\vdots & \vdots & \ddots & \vdots \\
+0 & 0 & \cdots & \frac{1}{z_n}
+\end{bmatrix}.
+\]
+
+El estimador de mínimos cuadrados ponderados se obtiene como:
+
+\[
+\hat{\beta}_W = (\mathbf{Z}^T V^{-1} \mathbf{Z})^{-1} \mathbf{Z}^T V^{-1} \mathbf{Y}
+\]
+
+\[
+= \left( \sum_{i=1}^{n} \frac{z_i^2}{z_i} \right)^{-1} \sum_{i=1}^{n} \frac{z_i Y_i}{z_i}.
+\]
+
+\[
+= \left( \sum_{i=1}^{n} z_i \right)^{-1} \sum_{i=1}^{n} Y_i.
+\]
+
+Por lo tanto, la estimación de la pendiente del modelo es:
+
+\[
+\hat{\beta}_W = \frac{\sum_{i=1}^{n} Y_i}{\sum_{i=1}^{n} z_i}.
+\]
+
+Todos los \( Y_i \) tienen la misma influencia en la estimación.
+
+### (c) 
+\( \operatorname{Var}(\varepsilon_j) = \sigma^2 z_j^2 \)
+
+Entonces, la matriz de covarianza de varianza \( \sigma^2 V \) de \( \varepsilon \) es diagonal y tiene la forma:
+
+\[
+V =
+\begin{bmatrix}
+z_1^2 & 0 & \cdots & 0 \\
+0 & z_2^2 & \cdots & 0 \\
+\vdots & \vdots & \ddots & \vdots \\
+0 & 0 & \cdots & z_n^2
+\end{bmatrix}.
+\]
+
+La inversa de \( V \) es:
+
+\[
+V^{-1} =
+\begin{bmatrix}
+\frac{1}{z_1^2} & 0 & \cdots & 0 \\
+0 & \frac{1}{z_2^2} & \cdots & 0 \\
+\vdots & \vdots & \ddots & \vdots \\
+0 & 0 & \cdots & \frac{1}{z_n^2}
+\end{bmatrix}.
+\]
+
+El estimador de mínimos cuadrados ponderados se obtiene como:
+
+\[
+\hat{\beta}_W = (\mathbf{Z}^T V^{-1} \mathbf{Z})^{-1} \mathbf{Z}^T V^{-1} \mathbf{Y}
+\]
+
+\[
+= \left( \sum_{i=1}^{n} \frac{z_i^2}{z_i^2} \right)^{-1} \sum_{i=1}^{n} \frac{z_i Y_i}{z_i^2}.
+\]
+
+\[
+= \left( \sum_{i=1}^{n} 1 \right)^{-1} \sum_{i=1}^{n} \frac{Y_i}{z_i}.
+\]
+
+Dado que \( \sum_{i=1}^{n} 1 = n \), obtenemos:
+
+\[
+\hat{\beta}_W = \frac{1}{n} \sum_{i=1}^{n} \frac{Y_i}{z_i}.
+\]
+
+Así, la estimación de la pendiente del modelo es:
+
+\[
+\hat{\beta}_W = \frac{1}{n} \sum_{i=1}^{n} \frac{Y_i}{z_i}.
+\]
+
+En este caso, los valores altos de \(z_i\) reducen la influencia de \(Y_i\) en la estimación.
+
+## 7.6
+
+### (a)
+
+Show that $$
+(Z^T Z)^{-} = \sum_{i=1}^{r_1+1} \lambda_i^{-1} e_i e_i^T
+$$ is a generalized inverse of $Z^T Z$.
+
+Como los valores propios de $(Z^T Z)$ cumplen que: $$
+\lambda_1 \geq \lambda_2 \geq \dots \geq \lambda_{r+1} > 0
+$$ $(Z^T Z)$ es definida positiva y se puede descomponer como:
+
+$$
+Z^T Z = P \Lambda P^T
+$$
+
+Donde $$
+P = \begin{bmatrix} \vec{e}_1^T, \dots, \vec{e}_{r+1}^T \end{bmatrix}^T, \quad 
+\Lambda = \text{diag}(\lambda_1, \dots, \lambda_{r+1})
+$$
+
+Así,
+
+$$
+Z^T Z = \sum_{i=1}^{r+1} \lambda_i \, \vec{e}_i \vec{e}_i^T
+$$
+
+Sea
+
+$$
+G = \sum_{i=1}^{r+1} \lambda_i^{-1} \vec{e}_i \vec{e}_i^T
+$$
+
+Luego,
+
+$$
+(Z^T Z) G (Z^T Z) =
+$$
+
+$$
+\left( \sum_{i=1}^{r+1} \lambda_i \vec{e}_i \vec{e}_i^T \right)
+\left( \sum_{i=1}^{r+1} \lambda_i^{-1} \vec{e}_i \vec{e}_i^T \right)
+\left( \sum_{i=1}^{r+1} \lambda_i \vec{e}_i \vec{e}_i^T \right)
+$$
+
+$$
+= \sum_{i=1}^{r+1} \lambda_i^2 \left( \lambda_i^{-1} \vec{e}_i \vec{e}_i^T \right) \vec{e}_i \vec{e}_i^T
+$$
+
+$$
+= \sum_{i=1}^{r+1} \lambda_i \vec{e}_i \left( \vec{e}_i^T \vec{e}_i \right) (\vec{e}_i^T \vec{e}_i) \vec{e}_i^T
+\quad \text{(los vectores propios son ortonormales)}
+$$
+
+$$
+= \sum_{i=1}^{r+1} \lambda_i \vec{e}_i \vec{e}_i^T
+$$
+
+$$
+= (Z^T Z)
+$$
+
+Así,
+
+$$
+G = \sum_{i=1}^{r+1} \lambda_i^{-1} \vec{e}_i \vec{e}_i^T
+$$
+
+es una inversa generalizada de $Z^T Z$.
+
+### (b)
+
+The coefficients $\hat{\beta}$ that minimize the sum of squared errors
+$(y - Z\beta)^T (y - Z\beta)$ satisfy the \textit{normal equations}
+$(Z^T Z) \hat{\beta} = Z^T y$. Show that these equations are satisfied
+for any $\hat{\beta}$ such that $Z\hat{\beta}$ is the projection of $y$
+on the columns of $Z$.
+
+Si $Z\hat{\beta}$ es la proyección de $y$ sobre el espacio generado por
+las columnas de $Z$, es decir, $$
+C(Z)
+$$ se tiene que: $$
+y - Z\hat{\beta} \perp C(Z)
+$$
+
+Esto implica que: $$
+Z^T (y - Z\hat{\beta}) = 0
+$$
+
+Expandiendo la ecuación: $$
+Z^T y - Z^T Z\hat{\beta} = 0
+$$
+
+Finalmente, obtenemos la ecuación normal: $$
+Z^T Z\hat{\beta} = Z^T y
+$$
+
+### (c)
+
+Show that $$
+Z\hat{\beta} = Z(Z^T Z)^{-} Z^T y
+$$ is the projection of $y$ on the columns of $Z$. (See Footnote 2 in
+this chapter.)
+
+Consideremos:
+
+$$
+q_i = \lambda_i^{-1/2} Z e_i, \quad i = 1, \dots, r+1
+$$
+
+Se tiene que:
+
+$$
+q_i^T q_i = \lambda_i^{-1} e_i^T (Z^T Z) e_i
+$$
+
+$$
+= \lambda_i^{-1} e_i^T \left( \sum_{j=1}^{r+1} e_j \lambda_j e_j^T \right) e_i
+$$
+
+$$
+= \lambda_i^{-1} e_i^T (\lambda_i e_i e_i^T) e_i
+$$
+
+$$
+= 1
+$$
+
+Similarmente,
+
+$$
+q_i^T q_k = \lambda_i^{-1} e_i^T (Z^T Z) e_k
+$$
+
+$$
+= \lambda_i^{-1} e_i^T \left( \sum_{j=1}^{r+1} e_j \lambda_j e_j^T \right) e_k
+$$
+
+$$
+= \lambda_i^{-1} e_i^T (\lambda_i e_i e_i^T) e_k
+$$
+
+$$
+= 0
+$$
+
+Así, los $q_i$ para $i=1, \dots, r+1$ son ortonormales.
+
+Luego,
+
+$$
+Z (Z^T Z)^{-1} Z^T = Z \left( \sum_{i=1}^{r+1} \lambda_i^{-1} e_i e_i^T \right) Z^T
+$$
+
+$$
+= \sum_{i=1}^{r+1} \lambda_i^{-1} (Z e_i e_i^T Z^T)
+$$
+
+$$
+= \sum_{i=1}^{r+1} ([\lambda_i^{-1/2} Z e_i][\lambda_i^{-1/2} Z e_i]^T)
+$$
+
+$$
+= \sum_{i=1}^{r+1} q_i q_i^T
+$$
+
+Así, $Z (Z^T Z)^{-1} Z^T$ es una suma de proyecciones ortogonales sobre
+el espacio columna de $Z$ y, por lo tanto, la proyección de $y$ sobre
+$C(Z)$ es:
+
+$$
+Z (Z^T Z)^{-1} Z^T y
+$$
+
+### (d)
+
+Show directly that $$
+\hat{\beta} = (Z^T Z)^{-} Z^T y
+$$ is a solution to the normal equations $$
+(Z^T Z) [(Z^T Z)^{-} Z^T y] = Z^T y.
+$$
+
+Queremos demostrar que:
+
+$$
+(Z^T Z) [(Z^T Z)^{-} Z^T y] = Z^T y.
+$$
+
+Sustituyendo $\hat{\beta} = (Z^T Z)^{-} Z^T y$ en la ecuación:
+
+$$
+(Z^T Z) \hat{\beta} = (Z^T Z) (Z^T Z)^{-} Z^T y.
+$$
+
+Dado que $(Z^T Z)^{-}$ es una inversa generalizada de $Z^T Z$, se cumple
+que:
+
+$$
+(Z^T Z) (Z^T Z)^{-} = I.
+$$
+
+Por lo tanto, la ecuación se reduce a:
+
+$$
+I Z^T y = Z^T y.
+$$
+
+Como la igualdad es válida, concluimos que
+$\hat{\beta} = (Z^T Z)^{-} Z^T y$ es una solución de las ecuaciones
+normales.
+
+## 7.11
+
+Let $\mathbf{A}$ be a positive definite matrix, so that
+
+$$
+d_j^2(\mathbf{B}) = (\mathbf{y}_j - \mathbf{B} \mathbf{z}_j)^T \mathbf{A} (\mathbf{y}_j - \mathbf{B} \mathbf{z}_j)
+$$
+
+is a squared statistical distance from the $j$th observation
+$\mathbf{y}_j$ to its regression $\mathbf{B} \mathbf{z}_j$. Show that
+the choice
+
+$$
+\mathbf{B} = \hat{\mathbf{B}} = (\mathbf{Z}^T \mathbf{Z})^{-} \mathbf{Z}^T \mathbf{Y}
+$$
+
+minimizes the sum of squared statistical distances,
+
+$$
+\sum_{j=1}^{n} d_j^2(\mathbf{B}),
+$$
+
+for any choice of positive definite $\mathbf{A}$. Choices for
+$\mathbf{A}$ include $\mathbf{\Sigma}^{-1}$ and $\mathbf{I}$.
+
+\textit{Hint:} Repeat the steps in the proof of Result 7.10 with
+$\mathbf{\Sigma}^{-1}$ replaced by $\mathbf{A}$.
+
+Sea $\hat{\beta} = (Z^T Z)^{-} Z^T Y$ y
+
+$$
+\sum_{j=1}^{n} d_j^2 (B) = \sum_{j=1}^{n} (Y_j - BZ_j)^T A (Y_j - B^T Z_j)
+$$
+
+$$
+= (Y - ZB)^T A (Y - ZB)
+$$
+
+Se tiene que:
+
+$$
+\text{Traza} \left( \sum_{j=1}^{n} d_j^2 (B) \right) = \text{Traza} \left( (Y - ZB)^T A (Y - ZB) \right)
+$$
+
+$$
+= \text{Traza} \left( A (Y - Z \beta)^T (Y - Z\beta) \right)
+$$
+
+$$
+= \text{Traza} \left( A (Y+Z\hat{\beta}-Z\hat{\beta} - Z \beta)^T (Y+Z\hat{\beta}-Z\hat{\beta} - Z \beta) \right)
+$$
+
+$$
+= \text{Traza} \left( A \left( (Y - Z \hat{\beta}) + (Z \beta - Z \hat{\beta}) \right)^T \left((Y - Z \hat{\beta}) + Z \beta - Z \hat{\beta} \right) \right)
+$$
+
+$$
+= \text{Traza} \left( A \left(\hat{\varepsilon} + \left( Z \beta - Z \hat{\beta} \right) \right)^T \left(\hat{\varepsilon} + \left( Z \beta - Z \hat{\beta} \right) \right) \right)
+$$
+
+$$
+= \text{Traza} \left( A \left( \hat{\varepsilon} \hat{\varepsilon}^T + Z (\beta - \hat{\beta})^T \hat{\varepsilon} + (\beta - \hat{\beta})^T Z^T \hat{\varepsilon} + (\beta - \hat{\beta})^T Z^T Z (\beta - \hat{\beta}) \right) \right)
+$$
+
+Dado que $Z$ y $Y - Z\hat{\beta}$ son ortogonales, el calculo se reduce
+a:
+
+$$
+\text{Traza} \left( \sum_{j=1}^{n} d_j^2 (B) \right)=\text{Traza} \left( A \hat{\varepsilon}^T \hat{\varepsilon} \right) + \text{Traza} \left( A(\beta - \hat{\beta})^T Z^T Z (\beta - \hat{\beta})  \right)
+$$
+
+Note que el primer termino no depende de la elección de $\beta$,
+centrandonos en el segundo termino:
+
+$$
+\text{Traza} \left( A (\hat{\beta} - \beta)^T Z^T Z (\hat{\beta} - \beta) \right)
+$$
+
+$$
+= \text{Traza} \left( (\hat{\beta} - \beta)^T Z^T Z (\hat{\beta} - \beta) A \right)
+$$
+
+$$
+= \text{Traza} \left( (Z^T Z (\hat{\beta} - \beta)) A (\hat{\beta} - \beta)^T \right)
+$$
+
+$$
+= \text{Traza} \left( Z (\hat{\beta} - \beta) A (\hat{\beta} - \beta)^T Z^T \right)
+$$
+
+$$
+= \text{Traza} \left( C^T A C \right)
+$$
+
+$$
+\geq 0 \quad \text{(A es definida positiva)}
+$$ Esta expresión solo se anula si $\beta = \hat{\beta}$, por lo que
+$\hat{\beta}$ es la mejor opción para cualquier $A$ definida positiva.
+
+## 7.19
+
+Satellite applications motivated the development of a silver-zinc
+battery. Table 7.5 contains failure data collected to characterize the
+performance of the battery during its life cycle. Use these data.
+
+```{r, echo=FALSE}
+battery_data <- data.frame(
+  Z1 = c(0.375, 1.000, 1.000, 1.000, 1.625, 1.625, 1.625, .375, 1.000, 1.000, 
+         1.000, 1.625, .375, 1.000, 1.000, 1.000, 1.625,1.625,0.375, 0.375),
+  Z2 = c(3.13, 3.13, 3.13, 3.13, 3.13, 3.13, 3.13, 5.00, 5.00, 5.00,5.00, 
+         5.00, 1.25, 1.25, 1.25, 1.25, 1.25,1.25, 3.13, 3.13),
+  Z3 = c(60.0, 76.8, 60.0, 60.0, 43.2, 60.0, 60.0, 76.8, 43.2,43.2, 100.0, 
+         76.8, 76.8, 43.2, 76.8,60.0, 43.2, 60.0,76.8,  60.0),
+  Z4 = c(40, 30, 20, 20, 10, 20, 20, 10,10, 30, 20, 10, 10, 10, 30, 0,30,20,30,20),
+  Z5 = c(2.00, 1.99, 2.00, 1.98, 2.01, 2.00, 2.02,2.01, 1.99, 2.01, 2.00, 
+         1.99, 2.01, 1.99, 2.00, 2.00, 1.99,2.00,1.99,2.00),
+  Y = c(101, 141, 96, 125, 43, 16, 188, 10, 3, 386, 45,2, 76, 78, 160, 
+        3,216,73, 314,170)
+)
+```
+
+### (a)
+
+Find the estimated linear regression of $\ln(Y)$ on an appropriate
+("best") subset of predictor variables.
+
+```{r}
+
+fit1<-lm(log(Y)~Z2+Z4, data = battery_data)
+round(fit1$coefficients,3)
+```
+
+###(b) 
+Plot the residuals from the fitted model chosen in Part (a) to
+check the normal assumption.
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE}
+
+invisible(capture.output({
+glmtoolbox::envelope(fit1)
+}))
+```
+
+Los residuos se ajustan bastante bien al supuesto de normalidad.
+
+## 7.20
+
+Using the battery-failure data in Table 7.5, regress $\ln (Y)$ on the
+first principal component of the predictor variables
+$z_1, z_2, \dots, z_5$. (See Section 8.3.) Compare the result with the
+fitted model obtained in Exercise 7.19(a).
+
+Primero realizamos el acp:
+
+```{r}
+R<-cor(battery_data[,-6])
+
+lambdas<-eigen(R)$values
+e<-eigen(R)$vectors
+
+PCA<-scale(battery_data[,-6])%*%e
+
+knitr::kable(PCA, col.names = c("CP1","CP2","CP3","CP4","CP5"))
+```
+
+El primer componente principal explica el siguiente porcentaje de
+varianza:
+
+```{r, echo=FALSE}
+paste(round(100*lambdas[1]/sum(lambdas),3),"%")
+```
+
+Realizamos la regresion con el primer componente principal:
+
+```{r, echo=FALSE}
+
+fit2 <- lm(log(battery_data[,6])~PCA[,1])
+
+coeficientes<-round(fit2$coefficients/sum(lambdas[1],lambdas[4]),4)
+
+coeficientes
+
+```
+
+## 7.21
+
+Consider the air-pollution data in Table 1.5. Let $Y_1 = \text{NO}_2$
+and $Y_2 = \text{O}_3$ be the two responses (pollutants) corresponding
+to the predictor variables $Z_1$ = wind and $Z_2$ = solar radiation.
+
+```{r, echo=FALSE}
+data = data.frame(
+  x1=c(8, 7, 7, 10, 6, 8, 9, 5, 7, 8, 6, 6, 7, 10, 10, 9, 8, 8, 9, 9, 10, 9, 8, 5, 6, 8, 6, 8, 6, 10, 8, 7, 5, 6, 10, 8, 5, 5, 7, 7, 6, 8),
+    x2= c(98, 107, 103, 88, 91, 90, 84, 72, 82, 64, 71, 91, 72, 70, 72, 77, 76, 71, 67, 69, 62, 88, 80, 30, 83, 84, 78, 79, 62, 37, 71, 52, 48, 75, 35, 85, 86, 86, 79, 79, 68, 40),
+    x3=c(7, 4, 4, 5, 4, 5, 7, 6, 5, 5, 5, 4, 7, 4, 4, 4, 4, 5, 4, 3, 5, 4, 4, 3, 5, 3, 4, 2, 4, 3, 4, 4, 6, 4, 4, 4, 3, 7, 7, 5, 6, 4),
+    x4=c(2, 3, 3, 2, 2, 212, 412, 421, 111, 213, 410, 212, 418, 2, 1, 1, 1, 316, 213, 3, 3, 2, 213, 3, 110, 2, 211, 1, 3, 1, 110, 112, 5, 110, 1, 1, 1, 213, 4, 2, 211, 3),
+    x5= c(12, 9, 5, 8, 8, 12, 12, 21, 11, 13, 10, 12, 18, 11, 8, 9, 7, 16, 13, 9, 14, 7, 13, 5, 10, 7, 11, 7, 9, 7, 10, 12, 8, 10, 6, 9, 6, 13, 9, 8, 11, 6),
+    x6= c(8, 5, 6, 15, 10, 4, 5, 4, 3, 4, 3, 3, 3, 7, 10, 10, 7, 4, 2, 5, 4, 6, 3, 3, 2, 3, 3, 3, 3, 3, 7, 8, 4, 2, 9, 10, 12, 18, 25, 6, 14, 5),
+    x7= c(2, 3, 3, 4, 3, 4, 5, 4, 3, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 3, 4, 3, 4, 3, 4, 3, 3, 3, 3, 3, 3, 3, 3, 3, 2, 2, 2, 2, 3, 2, 3, 2))
+
+```
+
+### (a)
+
+Perform a regression analysis using only the first response $Y_1$. \####
+(i) Suggest and fit appropriate linear regression models.
+
+```{r}
+fit<-lm(x5~x2+I(x2^2), data = data)
+summary(fit)
+
+```
+
+#### (ii)
+
+Analyze the residuals.
+
+```{r, message=FALSE,warning=FALSE, echo=FALSE}
+
+invisible(capture.output({
+glmtoolbox::envelope(fit)
+}))
+
+
+```
+
+Hay varios puntos fuera de las bandas de confianza. Se sospecha que el
+supuesto de normalidad en los residuos puede fallar.
+
+#### (iii)
+
+Construct a 95% prediction interval for $\text{NO}_2$ corresponding to
+$z_1 = 10$ and $z_2 = 80$.
+
+Se usa: $$
+z_0 \hat{\beta}_{(i)} \pm \sqrt{\left( \frac{m(n - r - 1)}{n - r - m} \right) F_{m,n-r-m}(\alpha)}
+\sqrt{(1 + z_0^T (Z^T Z)^{-1} z_0) \left( \frac{n}{n - r - 1} \hat{\sigma}_{ii} \right)}
+$$
+
+```{r}
+z0beta<-fit$coefficients[1]+fit$coefficients[2]*80+fit$coefficients[3]*80^2
+
+sigma_sq <- sum(residuals(fit)^2) / fit$df.residual
+
+a<-sqrt(qf(.95,1,42-3))
+X_mat <- model.matrix(fit)  # Matriz de diseño
+X_inv <- solve(t(X_mat) %*% X_mat)  # Inversa de X'X
+z0 <- c(1,80,80^2)  # Nuevo punto de predicción
+```
+
+```{r, echo=FALSE}
+b <- sqrt(7.47)
+knitr::kable(t(c(z0beta-a*b,z0beta+a*b)), col.names = c("LI","LS"))
+
+```
+
+### (b)
+
+Perform a multivariate multiple regression analysis using both responses
+$Y_1$ and $Y_2$. \#### (i) Suggest and fit appropriate linear regression
+models.
+
+```{r}
+fit1<-lm(cbind(x5,x6)~x1+x2, data = data)
+summary(fit1)
+```
+
+#### (ii)
+
+Analyze the residuals.
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE}
+res_x5 <- residuals(fit1)[,1]  # Residuos de x5
+res_x6 <- residuals(fit1)[,2]  # Residuos de x6
+invisible(capture.output({
+glmtoolbox::envelope(lm(res_x5 ~ 1))
+glmtoolbox::envelope(lm(res_x6 ~ 1))
+}))
+
+```
+
+Hay varios puntos fuera de las bandas de confianza. Se sospecha que el
+supuesto de normalidad en los residuos puede fallar.
+
+#### (iii)
+
+Construct a 95% prediction ellipse for both $\text{NO}_2$ and
+$\text{O}_3$ for $z_1 = 10$ and $z_2 = 80$. Compare this ellipse with
+the prediction interval in Part (a)(iii). Comment.
+
+```{r, message=FALSE, warning=FALSE}
+library(ellipse)
+library(car)
+z0<-c(1,10,80)
+
+m<-2
+n<-nrow(data)
+p<-fit1$df.residual
+
+Z<-model.matrix(fit1)
+
+m_inv<-solve(t(Z)%*%Z)
+
+center<-t(z0)%*%fit1$coefficients
+
+F_crit <- qf(0.95, m, p - m)
+
+# Varianza de predicción (usando matriz de covarianza y sigma estimado)
+sigma_sq <- c(3.416, 4.824)  # Estimaciones de varianza para NO2 y O3
+
+# Calcular el radio de la elipse
+ratio <- sqrt(m * p * F_crit / (p - m)) * 
+         sqrt((1 + t(z0) %*% m_inv %*% z0) * (n * sigma_sq / p))
+
+```
+
+```{r, fig.width=6, fig.height=8, fig.align='center',echo=FALSE, warning=FALSE}
+plot(data[,c(5,6)], type='n', ylim=c(0,15),xlim=c(2,18),
+     xlab=expression(NO[2]), ylab=expression(O[3]))
+ellipse(center =c(center[1],center[2]), shape = cor(data[,c(5,6)]), radius = c(ratio[1],ratio[2]), draw = TRUE)
+abline(h=center[2]+c(-ratio[2],ratio[2]), col="red", lty=2)
+abline(v=center[1]+c(-ratio[1],ratio[1]), col="red", lty=2)
+```
+
+Los limites para la confianza de las observaciones futuras varian
+especialmente porque en este caso se considera un modelo completamente
+lineal.
+
